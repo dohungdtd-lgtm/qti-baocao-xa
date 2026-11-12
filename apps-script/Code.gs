@@ -179,7 +179,7 @@ function duLieu_(ma) {
  */
 function locBaoCaoXa(v, xa) {
   const tieuDe = v[0].map(t => String(t).replace(/\s+/g, ' ').trim());
-  const cDonVi = tieuDe.indexOf('Đơn vị'), cTuan = tieuDe.indexOf('Tuần báo cáo'), cBoPhan = tieuDe.indexOf('Bộ phận báo cáo');
+  const cDonVi = tieuDe.indexOf('Đơn vị'), cBoPhan = tieuDe.indexOf('Bộ phận báo cáo');
   const cotLay = [];
   tieuDe.forEach((t, i) => { if (i > 0 && t && COT_BO_QUA.indexOf(t) < 0 && !/^Cột \d+$/.test(t)) cotLay.push(i); });
 
@@ -189,10 +189,9 @@ function locBaoCaoXa(v, xa) {
     if (String(row[cDonVi] || '').trim() !== xa) continue;
     const tg = docThoiGian(row[0]);
     if (!tg) continue;
-    let tuan = tuanCua(tg);
-    const ghiTuan = cTuan >= 0 ? String(row[cTuan] || '').trim() : '';
-    const m = ghiTuan.match(/Tuần\s*(\d+)/i);
-    if (m) tuan = { so: Number(m[1]), nam: tuan.nam, nhan: ghiTuan };
+    // Tuần báo cáo luôn tính theo ngày gửi (thứ Hai – Chủ nhật), không theo tuần xã tự chọn ở biểu mẫu cũ:
+    // gửi trong 02–08/11/2026 là tuần 45, gửi trong 09–15/11/2026 là tuần 46.
+    const tuan = tuanCua(tg);
     const muc = [];
     cotLay.forEach(i => {
       const tl = String(row[i] == null ? '' : row[i]).trim();
