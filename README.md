@@ -13,8 +13,8 @@ Mỗi đồng chí Chánh Văn phòng Đảng ủy xã, phường, đặc khu đ
 ## Cài đặt (một lần)
 
 1. Vào https://script.google.com bằng tài khoản sở hữu biểu mẫu → **Dự án mới** → dán toàn bộ `apps-script/Code.gs` → Lưu.
-2. Chọn hàm `caiDat` → **Chạy** → cấp quyền. Nhật ký in ra đường dẫn trang tính "Tài khoản trang báo cáo xã", đã điền sẵn tên các đơn vị.
-3. Điền họ tên, số điện thoại Chánh Văn phòng của từng đơn vị. Một đơn vị có thể có nhiều dòng (nhiều số). Dòng có cột Đơn vị là `*` xem được mọi đơn vị (dành cho Văn phòng Tỉnh ủy).
+2. Chọn hàm `caiDat` → **Chạy** → cấp quyền (hàm này tạo khóa bí mật ký mã đăng nhập).
+3. Trong trang tính "Tài khoản trang báo cáo xã (không chia sẻ)" (đã lập sẵn 78 đơn vị, cùng thư mục với trang tính câu trả lời), điền họ tên, số điện thoại Chánh Văn phòng của từng đơn vị. Một đơn vị có thể có nhiều dòng (nhiều số). Dòng có cột Đơn vị là `*` xem được mọi đơn vị (dành cho Văn phòng Tỉnh ủy).
 4. **Triển khai → Tùy chọn triển khai mới → Ứng dụng web**: Thực thi với tư cách *Tôi*, Người có quyền truy cập *Bất kỳ ai*. Sao chép địa chỉ kết thúc bằng `/exec`.
 5. Mở `index.html`, dán địa chỉ đó vào dòng `const DIA_CHI_MAY_CHU = '';`, đẩy lên GitHub.
 6. Repo → Settings → Pages → Deploy from branch `main`, thư mục `/ (root)`.

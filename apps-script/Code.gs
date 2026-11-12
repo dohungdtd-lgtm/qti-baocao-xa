@@ -11,6 +11,7 @@
 const CAU_HINH = {
   ID_TRA_LOI: '1a2VJ62wC-QxDLUg5S6ZsoxpRE7tvXzNz2HvHDXGqMcY', // BÁO CÁO TUẦN- QTI (Câu trả lời)
   TAB_TRA_LOI: 'Câu trả lời biểu mẫu 1',
+  ID_TAI_KHOAN: '17FYIhMUsTT94H2rHohFZyNsf2Y8TN769o56y-2fnbG0', // Tài khoản trang báo cáo xã (không chia sẻ); đọc trang tính đầu tiên
   TAB_TAI_KHOAN: 'TaiKhoan',
   HAN_PHIEN_GIO: 12,          // mã phiên đăng nhập hết hạn sau 12 giờ
   DEM_GIAY: 120,              // dữ liệu mỗi xã được giữ tạm 2 phút để trang mở nhanh
@@ -29,7 +30,7 @@ function caiDat() {
   if (!tc.getProperty('KHOA_BI_MAT')) {
     tc.setProperty('KHOA_BI_MAT', Utilities.getUuid() + Utilities.getUuid());
   }
-  let id = tc.getProperty('ID_TAI_KHOAN');
+  let id = CAU_HINH.ID_TAI_KHOAN || tc.getProperty('ID_TAI_KHOAN');
   if (!id) {
     const ss = SpreadsheetApp.create('Tài khoản trang báo cáo xã (không chia sẻ)');
     const sh = ss.getSheets()[0].setName(CAU_HINH.TAB_TAI_KHOAN);
@@ -90,9 +91,9 @@ function chuanSdt_(s) {
 
 /** Bảng số điện thoại → {xa, ten}. Đơn vị ghi "*" là tài khoản xem được mọi xã (dành cho Văn phòng). */
 function bangTaiKhoan_() {
-  const id = PropertiesService.getScriptProperties().getProperty('ID_TAI_KHOAN');
+  const id = CAU_HINH.ID_TAI_KHOAN || PropertiesService.getScriptProperties().getProperty('ID_TAI_KHOAN');
   if (!id) throw new Error('Chưa chạy caiDat()');
-  const v = SpreadsheetApp.openById(id).getSheetByName(CAU_HINH.TAB_TAI_KHOAN).getDataRange().getDisplayValues();
+  const v = SpreadsheetApp.openById(id).getSheets()[0].getDataRange().getDisplayValues();
   const b = {};
   for (let i = 1; i < v.length; i++) {
     const xa = String(v[i][0]).trim(), sdt = chuanSdt_(v[i][2]);
