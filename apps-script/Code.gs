@@ -170,7 +170,9 @@ function duLieu_(ma) {
     const chuoi = JSON.stringify(baoCao);
     if (chuoi.length < 95000) dem.put(khoaDem, chuoi, CAU_HINH.DEM_GIAY);
   }
-  return { ok: true, xa: p.xa, ten: p.ten, capNhat: new Date().toISOString(), tuanNay: tuanCua(new Date()), baoCao: baoCao };
+  let wi = null;
+  try { if (typeof wiCuaXa === 'function') wi = wiCuaXa(p.xa); } catch (e) { console.error(e); }
+  return { ok: true, xa: p.xa, ten: p.ten, capNhat: new Date().toISOString(), tuanNay: tuanCua(new Date()), baoCao: baoCao, wi: wi };
 }
 
 /**

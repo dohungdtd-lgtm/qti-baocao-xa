@@ -321,13 +321,29 @@ function chiTieuTrongTam(g){
   const cs = (a,b) => `${dinhSo(a,0)} / ${dinhSo(b,0)} cơ sở`;
   const mk = (ma, ten, tu, mauSo, mt, ghi) => {
     const pt = tu && mauSo && mauSo.v ? tu.v / mauSo.v * 100 : null;
-    return { ma, ten, pt, mt, lop: mau(pt, mt), ghi: pt == null ? 'Chưa có số liệu' : ghi(tu.v, mauSo.v) };
+    return { ma, ngan: {gn:'Giải ngân',gnnt:'Vốn năm trước',nd:'Nhà, đất dôi dư',thu:'Thu ngân sách'}[ma], ten, pt, mt, lop: mau(pt, mt), ghi: pt == null ? 'Chưa có số liệu' : ghi(tu.v, mauSo.v) };
   };
   return [
     mk('gn','Giải ngân vốn đầu tư công năm nay', L('[Lũy kế từ đầu năm] Giải ngân vốn kế hoạch năm nay (triệu đồng)'), L('[Tại ngày chốt] Kế hoạch vốn năm nay sau điều chỉnh, bổ sung (triệu đồng)'), mocHienTai(MOC_VON), ty),
     mk('gnnt','Giải ngân vốn năm trước chuyển sang', L('[Lũy kế từ đầu năm] Giải ngân vốn năm trước chuyển sang (triệu đồng)'), L('[Tại ngày chốt] Kế hoạch vốn năm trước được kéo dài sang năm nay (triệu đồng)'), {pt:100, ngay:'2026-12-31'}, ty),
     mk('nd','Nhà, đất dôi dư đã xử lý xong', L('[Tại ngày chốt] Số cơ sở đã xử lý xong, đưa vào khai thác, sử dụng (cơ sở)'), L('[Tại ngày chốt] Tổng số cơ sở nhà, đất dôi dư trên địa bàn (cơ sở)') || L('[Tại ngày chốt] Tổng số cơ sở nhà, đất dôi dư trên địa bàn thuộc quản lý của địa phương (cơ sở)'), {pt:100, ngay:'2027-01-05'}, cs),
     mk('thu','Thu ngân sách so với dự toán', L('[Lũy kế từ đầu năm] Thu ngân sách nhà nước (triệu đồng)'), L('[Cả năm] Dự toán thu ngân sách nhà nước HĐND cấp xã giao (triệu đồng)') || L('[Cả năm] Dự toán thu ngân sách nhà nước tỉnh giao (triệu đồng)'), null, ty),
+  ];
+}
+
+/** Chỉ tiêu trọng tâm lấy từ Quang Tri Weekly Index (số đã chốt, ưu tiên số Kho bạc, Sở Tài chính). */
+function chiTieuWI(c){
+  const ty = (a,b) => `${dinhSo((a||0)/1000,1)} / ${dinhSo((b||0)/1000,1)} tỷ đồng`;
+  const mt = mocHienTai(MOC_VON);
+  const mk = (ma, ngan, ten, pt, moc, ghi) => ({ ma, ngan, ten, pt: pt==null ? null : +pt, mt: moc, lop: mau(pt==null?null:+pt, moc), ghi: pt==null ? (ghi || 'Chưa có số liệu') : ghi });
+  const nguonGn = c.gn_nguon === 'tinh' ? `số Kho bạc, Sở Tài chính${c.gn_ky ? ' ngày ' + c.gn_ky : ''}` : 'số xã báo cáo';
+  return [
+    mk('gn','Giải ngân','Giải ngân vốn đầu tư công năm nay', c.tl_gn, mt, `${ty(c.gn_lk,c.kh_von)} · ${nguonGn}`),
+    mk('gnnt','Vốn năm trước','Giải ngân vốn năm trước chuyển sang', c.tl_gn_nt, {pt:100, ngay:'2026-12-31'}, c.von_nt ? ty(c.gn_nt,c.von_nt) : 'Không có vốn năm trước chuyển sang'),
+    mk('nd','Nhà, đất dôi dư','Nhà, đất dôi dư đã xử lý xong', c.nd_pct_xong, {pt:100, ngay:'2027-01-05'}, c.nd_tong ? `${c.nd_xong||0} / ${c.nd_tong} cơ sở${c.nd_nguon==='tinh' && c.nd_tinh ? ' · danh mục Sở Tài chính ' + c.nd_tinh.ky : ''}` : 'Không có cơ sở phải xử lý'),
+    mk('thu','Thu ngân sách','Thu ngân sách so với dự toán', c.tl_thu, null, ty(c.thu_lk,c.du_toan) + (c.so_cung_ky!=null ? ` · bằng ${dinhSo(c.so_cung_ky,1)}% cùng kỳ` : '')),
+    mk('khcn','Vốn KHCN, CĐS','Giải ngân vốn KHCN, ĐMST, CĐS', c.khcn_tl, mt, c.khcn_von ? ty(c.khcn_gn,c.khcn_von) : 'Không có kế hoạch vốn'),
+    mk('ct','Vốn CTMTQG','Giải ngân vốn các chương trình MTQG', c.ct_tl, mt, c.ct_von ? `${ty(c.ct_gn,c.ct_von)}${c.ct_ky ? ' · ngày ' + c.ct_ky : ''}` : 'Không có kế hoạch vốn'),
   ];
 }
 
@@ -382,19 +398,24 @@ async function veTrang(d){
   const ngayHan = han.toLocaleDateString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh', day:'2-digit', month:'2-digit', year:'numeric' });
   const khoang = tn.nhan.replace(/^Tuần \d+\s*/, '').replace(/[()]/g,'');
   const conLai = conMs > 0 ? (conMs > 864e5 ? `còn ${Math.floor(conMs/864e5)} ngày` : `còn ${Math.floor(conMs/36e5)} giờ ${Math.floor(conMs%36e5/6e4)} phút`) : 'đã quá hạn';
-  $('khoiKy').innerHTML =
+  const wm = d.wi && d.wi.meta;
+  if (wm && wm.hien) $('khoiKy').innerHTML =
+    `<div class="o-ky vang"><small>${esc(wm.hien.nhan)}</small><b>${esc(wm.hien.tuan)}</b><span>${esc(wm.hien.chu)}</span></div>`
+    + (wm.tiep ? `<div class="o-ky vien"><small>${esc(wm.tiep.nhan)}</small><b>${esc(wm.tiep.tuan)}</b><span>${esc(wm.tiep.chu)}</span></div>` : '');
+  else $('khoiKy').innerHTML =
     `<div class="o-ky vang"><small>Tuần đang báo cáo</small><b>TUẦN ${tn.so}</b><span>${esc(khoang)} · ${banNay.length ? 'đã gửi ' + banNay.length + ' bản' : 'chưa gửi bản nào'}</span></div>`
     + `<div class="o-ky vien${!banNay.length && conMs <= 0 ? ' tre' : ''}"><small>Hạn nộp</small><b>17:00 thứ Năm</b><span>${ngayHan} · ${conLai}</span></div>`;
 
   const g = gopChiSo(d.baoCao);
-  const ct = chiTieuTrongTam(g);
+  const wx = d.wi && d.wi.xa;
+  const ct = wx && wx.chiSo ? chiTieuWI(wx.chiSo) : chiTieuTrongTam(g);
   let h = '';
   if (thuNghiem) h += `<div class="thu-nghiem">Bản xem thử với số liệu giả.</div>`;
 
   // Bản đồ + thẻ chỉ số
   const chon = ct.find(c => c.ma === chiTieuBd) || ct[0];
-  h += `<div class="luoi"><section class="panel c7"><header><h2>Bản đồ địa bàn</h2><span class="chuthich">Tô màu theo chỉ tiêu đang chọn; các địa bàn giáp ranh để chìm</span></header><div class="than">
-    <div class="seg" role="group" aria-label="Chỉ tiêu tô màu bản đồ">${ct.map(c => `<button type="button" data-bd="${c.ma}" aria-pressed="${c.ma===chon.ma}">${esc(c.ten.replace(/ (đầu tư công )?năm nay| chuyển sang| so với dự toán| đã xử lý xong/g,'').replace('Giải ngân vốn năm trước','Vốn năm trước').replace('Giải ngân vốn','Giải ngân'))}</button>`).join('')}</div>
+  h += `<div class="luoi"><section class="panel c7"><header><h2>Bản đồ địa bàn</h2><span class="chuthich">Tô màu theo chỉ tiêu đang chọn; các địa bàn giáp ranh để chìm${wx && wx.chiSo ? '; số liệu Quang Tri Weekly Index' : ''}</span></header><div class="than">
+    <div class="seg" role="group" aria-label="Chỉ tiêu tô màu bản đồ">${ct.map(c => `<button type="button" data-bd="${c.ma}" aria-pressed="${c.ma===chon.ma}">${esc(c.ngan)}</button>`).join('')}</div>
     <div class="chu-giai"><span><i style="background:var(--good)"></i>Đạt mốc</span><span><i style="background:var(--warn)"></i>Cảnh báo (thấp hơn mốc dưới 10 điểm)</span><span><i style="background:var(--crit)"></i>Báo động</span><span><i style="background:var(--neutral)"></i>Chưa có mốc hoặc chưa có số liệu</span></div>
     <p class="chi-tiet-bd" style="margin:0 0 4px"><b style="color:var(--ink)">${esc(chon.ten)}: ${chon.pt==null ? 'chưa có số liệu' : dinhSo(chon.pt,1) + '%'}</b>${chon.mt ? ` · mốc ${chon.mt.pt}% trước ${ngayVn(chon.mt.ngay)}` : ''}</p>
     ${veBanDo(bd, d.xa, chon.lop)}</div></section>`;
@@ -412,6 +433,8 @@ async function veTrang(d){
       <div class="g">${esc(c.ghi)}${c.mt ? `<br>Mốc ${c.mt.pt}% trước ${ngayVn(c.mt.ngay)}` : ''}</div></div>`;
   });
   h += `</div></section></div>`;
+
+  if (wx) h += veMucWI(wx);
 
   // Bảng số liệu
   const cacTuan = Object.keys(g.tuan).map(Number).sort((a,b)=>b-a);
@@ -451,7 +474,34 @@ async function veTrang(d){
   $('noiDung').innerHTML = h;
   $('noiDung').querySelectorAll('[data-bd]').forEach(b => b.addEventListener('click', () => { chiTieuBd = b.dataset.bd; veTrang(duLieuCuoi); }));
   const lc = new Date(d.capNhat).toLocaleString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit', year:'numeric' });
-  $('chanTrang').innerHTML = `Số liệu đọc trực tiếp từ biểu mẫu báo cáo tuần, cập nhật lúc ${lc}. Trang tự làm mới 5 phút một lần.<br>Văn phòng Tỉnh ủy Quảng Trị · © 2026 ĐTH-VPTU`;
+  $('chanTrang').innerHTML = `${d.wi && d.wi.meta ? 'Chỉ số, danh mục và nhiệm vụ lấy từ Quang Tri Weekly Index (đồng bộ ' + new Date(d.wi.meta.capNhat).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}) + '); ' : ''}tình trạng nộp và bản gửi đọc trực tiếp từ biểu mẫu, cập nhật lúc ${lc}. Trang tự làm mới 5 phút một lần.<br>Văn phòng Tỉnh ủy Quảng Trị · © 2026 ĐTH-VPTU`;
+}
+
+function veMucWI(x){
+  let h = '';
+  if (x.kiemTra && x.kiemTra.length) {
+    h += `<section class="panel" style="border-color:var(--warn)"><header><h2>Số liệu cần kiểm tra lại</h2><span class="chuthich">${x.kiemTra.length} trường hợp Văn phòng Tỉnh ủy đề nghị xác minh, sửa ở bản báo cáo tuần tới</span></header><div class="than"><div class="bang-wrap"><table><thead><tr><th>Mã</th><th>Chỉ tiêu</th><th>Lý do</th></tr></thead><tbody>`
+      + x.kiemTra.map(k => `<tr><td style="min-width:0;white-space:nowrap">${esc(k.ma)}</td><td>${esc(k.chiTieu)}</td><td>${esc(k.chiTiet)}</td></tr>`).join('') + '</tbody></table></div></div></section>';
+  }
+  if (x.nhaDat && x.nhaDat.length) {
+    const xong = x.nhaDat.filter(n => n.daXuLy).length;
+    const ds = [...x.nhaDat].sort((a,b) => (a.daXuLy?1:0) - (b.daXuLy?1:0));
+    h += `<section class="panel"><header><h2>Cơ sở nhà, đất dôi dư trên địa bàn</h2><span class="chuthich">${xong}/${x.nhaDat.length} cơ sở đã xử lý xong; theo danh mục Sở Tài chính, cơ sở chưa xong xếp trước</span></header><div class="than"><div class="bang-wrap"><table><thead><tr><th>Cơ sở</th><th>Phương án, tiến độ</th><th class="so">Tình trạng</th></tr></thead><tbody>`
+      + ds.map(n => `<tr><td>${esc(n.ten)}${n.dtDat ? `<span class="canh" style="color:var(--ink-3)">Đất ${dinhSo(n.dtDat,1)} m²${n.dtNha ? ', nhà ' + dinhSo(n.dtNha,1) + ' m²' : ''}</span>` : ''}</td><td>${esc(n.phuongAn || '–')}${n.tienDo ? `<span class="canh" style="color:var(--ink-2)">${esc(n.tienDo)}</span>` : ''}${n.vuongMac ? `<span class="canh">Vướng mắc: ${esc(n.vuongMac)}</span>` : ''}</td><td class="so"><span class="huy ${n.daXuLy ? 'xanh' : 'vang'}">${n.daXuLy ? 'Đã xử lý' : 'Chưa xong'}</span>${!n.daXuLy && n.duKien ? `<span class="chenh" style="color:var(--ink-2)">Dự kiến ${esc(n.duKien)}</span>` : ''}</td></tr>`).join('')
+      + '</tbody></table></div></div></section>';
+  }
+  if (x.duAn && x.duAn.length) {
+    h += `<section class="panel"><header><h2>Dự án chậm tiến độ, tồn đọng trên địa bàn</h2><span class="chuthich">${x.duAn.length} dự án</span></header><div class="than"><div class="bang-wrap"><table><thead><tr><th>Dự án</th><th>Tình trạng</th><th>Vướng mắc</th></tr></thead><tbody>`
+      + x.duAn.map(a => `<tr><td>${esc(a.du_an)}${a.chu_dau_tu ? `<span class="canh" style="color:var(--ink-3)">${esc(a.chu_dau_tu)}</span>` : ''}</td><td><span class="huy do">${esc(a.tinh_trang || '')}</span></td><td>${esc(a.vuong_mac || '–')}</td></tr>`).join('')
+      + '</tbody></table></div></div></section>';
+  }
+  if (x.nhiemVu && x.nhiemVu.length) {
+    const lopTT = t => /hoàn thành/i.test(t) ? 'xanh' : /quá hạn|chậm/i.test(t) ? 'do' : 'vang';
+    h += `<section class="panel"><header><h2>Nhiệm vụ được giao có liên quan đến địa bàn</h2><span class="chuthich">${x.nhiemVu.length} nhiệm vụ theo dõi trên Quang Tri Weekly Index</span></header><div class="than"><div class="bang-wrap"><table><thead><tr><th>Nhiệm vụ</th><th>Chủ trì, phối hợp</th><th>Hạn</th><th class="so">Tình trạng</th></tr></thead><tbody>`
+      + x.nhiemVu.map(n => `<tr><td>${esc(n.ten)}<span class="canh" style="color:var(--ink-3)">${esc([n.nguon, n.vanBan].filter(Boolean).join(' · '))}</span>${n.tienDo != null && n.tienDo !== '' ? `<span class="canh" style="color:var(--ink-2)">${/^\d+(\.\d+)?$/.test(String(n.tienDo)) ? 'Tiến độ ' + dinhSo(+n.tienDo,0) + '%' : esc(n.tienDo)}</span>` : ''}${n.ketQua ? `<span class="canh" style="color:var(--ink-2)">${esc(n.ketQua)}</span>` : ''}</td><td>${esc(n.chuTri || '')}${n.phoiHop ? `<span class="canh" style="color:var(--ink-3)">Phối hợp: ${esc(n.phoiHop)}</span>` : ''}</td><td>${esc(n.han || '')}</td><td class="so"><span class="huy ${lopTT(n.trangThai||'')}">${esc(n.trangThai || '')}</span></td></tr>`).join('')
+      + '</tbody></table></div></div></section>';
+  }
+  return h;
 }
 
 /* ---------- Số liệu giả cho bản xem thử ---------- */
