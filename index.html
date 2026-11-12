@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Báo cáo tuần cấp xã</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Noto+Serif:wght@600;700&display=swap" rel="stylesheet">
+<script>
+  /* Cấu hình: dán địa chỉ ứng dụng web Apps Script (…/exec) vào đây. Để trống = bản xem thử với số liệu giả. */
+  const DIA_CHI_MAY_CHU = '';
+</script>
+<style>
+:root{
+  --nen:#f6f2ea; --the:#fffdf8; --chu:#1f1a17; --phu:#6b625a; --vien:#e4dccf;
+  --do:#a4161a; --do-nhat:#f7e3e1; --vang:#b7791f; --vang-nhat:#fbf0d9; --xanh:#2f7d4f; --xanh-nhat:#e2f1e7;
+  --bong:0 1px 2px rgba(60,40,20,.06),0 4px 14px rgba(60,40,20,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --nen:#171412; --the:#211d1a; --chu:#efe9e1; --phu:#a99f94; --vien:#3a332d;
+    --do:#e0585b; --do-nhat:#3d1f1f; --vang:#e3ad55; --vang-nhat:#3a2f1c; --xanh:#6cc191; --xanh-nhat:#1d3326;
+    --bong:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--nen);color:var(--chu);font:15px/1.55 "Be Vietnam Pro",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button,input,select{font:inherit;color:inherit}
+.khung{max-width:880px;margin:0 auto;padding:0 16px}
+h1,h2{font-family:"Noto Serif",Georgia,serif;font-weight:700;letter-spacing:-.01em}
+.an{display:none!important}
+
+/* Dải đầu trang */
+.dau{background:var(--do);color:#fff}
+.dau .khung{display:flex;align-items:center;gap:12px;padding-top:14px;padding-bottom:14px}
+.huy-hieu{width:34px;height:34px;flex:none;border-radius:50%;background:#fff;display:grid;place-items:center}
+.huy-hieu svg{width:22px;height:22px}
+.dau .ten-trang{font-size:12px;opacity:.85;text-transform:uppercase;letter-spacing:.06em}
+.dau .ten-xa{font-family:"Noto Serif",serif;font-size:19px;font-weight:700;line-height:1.25}
+.dau .nut-dau{margin-left:auto;display:flex;gap:6px}
+.nut-trang{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+.nut-trang:hover{background:rgba(255,255,255,.24)}
+
+/* Đăng nhập */
+.dang-nhap{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.hop-dn{width:100%;max-width:400px;background:var(--the);border:1px solid var(--vien);border-radius:16px;box-shadow:var(--bong);overflow:hidden}
+.hop-dn .dai{background:var(--do);color:#fff;padding:22px 24px 18px}
+.hop-dn .dai small{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.hop-dn h1{margin:6px 0 0;font-size:22px;line-height:1.3}
+.hop-dn form{padding:22px 24px 24px}
+label{display:block;font-weight:600;margin-bottom:6px}
+.o-nhap{width:100%;padding:12px 14px;border:1.5px solid var(--vien);border-radius:10px;background:var(--nen);font-size:18px;letter-spacing:.04em}
+.o-nhap:focus{outline:none;border-color:var(--do)}
+select.o-nhap{font-size:15px;letter-spacing:0}
+.goi-y{color:var(--phu);font-size:13px;margin:8px 0 18px}
+.nut{width:100%;background:var(--do);color:#fff;border:0;border-radius:10px;padding:12px;font-weight:600;font-size:16px;cursor:pointer}
+.nut[disabled]{opacity:.6;cursor:wait}
+.loi{background:var(--do-nhat);color:var(--do);border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+
+/* Nội dung */
+main{padding:20px 0 40px}
+.the{background:var(--the);border:1px solid var(--vien);border-radius:14px;box-shadow:var(--bong);padding:18px;margin-bottom:16px}
+.the h2{margin:0 0 4px;font-size:18px}
+.the .phu-de{color:var(--phu);font-size:13px;margin:0 0 14px}
+.thu-thach{background:var(--vang-nhat);color:var(--vang);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:16px}
+
+.tinh-trang{display:flex;gap:14px;align-items:flex-start}
+.dau-cham{width:44px;height:44px;flex:none;border-radius:12px;display:grid;place-items:center;font-size:22px;font-weight:700}
+.dat .dau-cham{background:var(--xanh-nhat);color:var(--xanh)}
+.cho .dau-cham{background:var(--vang-nhat);color:var(--vang)}
+.tre .dau-cham{background:var(--do-nhat);color:var(--do)}
+.tinh-trang .lon{font-weight:700;font-size:17px}
+.ds-gui{list-style:none;padding:0;margin:10px 0 0}
+.ds-gui li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px dashed var(--vien);font-size:14px}
+.ds-gui li span:last-child{color:var(--phu);white-space:nowrap}
+
+.luoi-tien-do{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.o-td{border:1px solid var(--vien);border-radius:12px;padding:12px 14px;background:var(--nen)}
+.o-td .nhan{font-size:13px;color:var(--phu);line-height:1.35;min-height:2.7em}
+.o-td .so{font-size:26px;font-weight:700;margin:4px 0 6px;font-variant-numeric:tabular-nums}
+.thanh{height:7px;border-radius:5px;background:var(--vien);overflow:hidden}
+.thanh i{display:block;height:100%;background:var(--phu)}
+.o-td .ghi{font-size:12px;color:var(--phu);margin-top:6px}
+.o-td.xanh .so{color:var(--xanh)} .o-td.xanh .thanh i{background:var(--xanh)}
+.o-td.vang .so{color:var(--vang)} .o-td.vang .thanh i{background:var(--vang)}
+.o-td.do .so{color:var(--do)} .o-td.do .thanh i{background:var(--do)}
+
+.bang-wrap{overflow-x:auto;margin:0 -18px;padding:0 18px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--phu);font-weight:600;padding:8px 6px;border-bottom:1.5px solid var(--vien)}
+td{padding:9px 6px;border-bottom:1px solid var(--vien);vertical-align:top}
+td.so,th.so{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ky{display:inline-block;font-size:11px;padding:1px 6px;border-radius:5px;background:var(--nen);border:1px solid var(--vien);color:var(--phu);margin-right:4px;white-space:nowrap}
+.tang{color:var(--xanh)} .giam{color:var(--do)} .bang{color:var(--phu)}
+.chenh{display:block;font-size:12px}
+td:first-child{min-width:150px}
+.canh{display:block;color:var(--vang);font-size:12px}
+
+details.tuan{border-top:1px solid var(--vien)}
+details.tuan:first-of-type{border-top:0}
+details.tuan>summary{list-style:none;cursor:pointer;padding:12px 0;display:flex;justify-content:space-between;gap:10px;font-weight:600}
+details.tuan>summary::-webkit-details-marker{display:none}
+details.tuan>summary::after{content:"＋";color:var(--phu);font-weight:400}
+details.tuan[open]>summary::after{content:"－"}
+.ban{border-left:3px solid var(--do);background:var(--nen);border-radius:0 10px 10px 0;padding:10px 14px;margin:0 0 12px}
+.ban .tieu{font-size:13px;color:var(--phu);margin-bottom:6px}
+.ban dl{margin:0}
+.ban dt{font-size:13px;color:var(--phu);margin-top:10px}
+.ban dd{margin:2px 0 0;white-space:pre-wrap;word-break:break-word}
+.rong{color:var(--phu);font-style:italic}
+
+footer{color:var(--phu);font-size:12px;text-align:center;padding:10px 16px 28px}
+.dang-tai{color:var(--phu);text-align:center;padding:40px 0}
+</style>
+</head>
+<body>
+
+<!-- ĐĂNG NHẬP -->
+<section id="manDangNhap" class="dang-nhap">
+  <div class="hop-dn">
+    <div class="dai">
+      <small>Văn phòng Tỉnh ủy Quảng Trị</small>
+      <h1>Báo cáo tuần của Đảng ủy xã, phường, đặc khu</h1>
+    </div>
+    <form id="fDangNhap" autocomplete="on">
+      <div id="loiDn" class="loi an" role="alert"></div>
+      <div id="khoiSdt">
+        <label for="sdt">Số điện thoại</label>
+        <input id="sdt" class="o-nhap" type="tel" inputmode="numeric" autocomplete="tel" placeholder="09xx xxx xxx" required>
+        <p class="goi-y">Số điện thoại của đồng chí Chánh Văn phòng Đảng ủy đã đăng ký với Văn phòng Tỉnh ủy. Trang chỉ hiện báo cáo của đơn vị mình.</p>
+      </div>
+      <div id="khoiChonXa" class="an">
+        <label for="chonXa">Chọn đơn vị cần xem</label>
+        <select id="chonXa" class="o-nhap"></select>
+        <p class="goi-y">Tài khoản của Văn phòng Tỉnh ủy xem được mọi đơn vị.</p>
+      </div>
+      <button id="nutDn" class="nut" type="submit">Vào trang</button>
+    </form>
+  </div>
+</section>
+
+<!-- TRANG CHÍNH -->
+<section id="manChinh" class="an">
+  <header class="dau">
+    <div class="khung">
+      <div class="huy-hieu" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path fill="#a4161a" d="M12 2.5l2.6 6.1 6.6.5-5 4.3 1.6 6.4L12 16.4l-5.8 3.4 1.6-6.4-5-4.3 6.6-.5z"/></svg>
+      </div>
+      <div>
+        <div class="ten-trang">Báo cáo tuần</div>
+        <div class="ten-xa" id="tenXa"></div>
+      </div>
+      <div class="nut-dau">
+        <button class="nut-trang" id="nutLamMoi" type="button">Làm mới</button>
+        <button class="nut-trang" id="nutThoat" type="button">Thoát</button>
+      </div>
+    </div>
+  </header>
+  <main class="khung" id="noiDung"><div class="dang-tai">Đang tải số liệu…</div></main>
+  <footer id="chanTrang"></footer>
+</section>
+
+<script>
+(function(){
+'use strict';
+const KHOA_LUU = 'qti_xa_phien';
+const $ = id => document.getElementById(id);
+const luu = {
+  lay(){ try { return localStorage.getItem(KHOA_LUU); } catch(e){ return null; } },
+  dat(v){ try { localStorage.setItem(KHOA_LUU, v); } catch(e){} },
+  xoa(){ try { localStorage.removeItem(KHOA_LUU); } catch(e){} }
+};
+const thuNghiem = !DIA_CHI_MAY_CHU;
+let maPhien = luu.lay();
+let henGio = null;
+
+/* ---------- Gọi máy chủ ---------- */
+async function goi(yc){
+  if (thuNghiem) return giaLap(yc);
+  const r = await fetch(DIA_CHI_MAY_CHU, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(yc) });
+  if (!r.ok) throw new Error('Mạng');
+  return r.json();
+}
+
+/* ---------- Đăng nhập ---------- */
+function baoLoi(t){ const e=$('loiDn'); e.textContent=t; e.classList.toggle('an', !t); }
+$('fDangNhap').addEventListener('submit', async ev => {
+  ev.preventDefault(); baoLoi('');
+  const nut = $('nutDn'); nut.disabled = true; nut.textContent = 'Đang kiểm tra…';
+  try {
+    const yc = { viec:'dangNhap', sdt: $('sdt').value };
+    if (!$('khoiChonXa').classList.contains('an')) yc.xaChon = $('chonXa').value;
+    const kq = await goi(yc);
+    if (!kq.ok) { baoLoi(kq.loi || 'Không đăng nhập được.'); return; }
+    if (kq.chonXa) {
+      $('chonXa').innerHTML = kq.dsXa.map(x => `<option>${esc(x)}</option>`).join('');
+      $('khoiChonXa').classList.remove('an'); $('khoiSdt').classList.add('an');
+      nut.textContent = 'Xem đơn vị này'; return;
+    }
+    maPhien = kq.ma; luu.dat(maPhien); moTrangChinh();
+  } catch(e) { baoLoi('Không kết nối được máy chủ. Đồng chí kiểm tra mạng rồi thử lại.'); }
+  finally { nut.disabled = false; if (nut.textContent === 'Đang kiểm tra…') nut.textContent = 'Vào trang'; }
+});
+
+$('nutThoat').addEventListener('click', () => {
+  luu.xoa(); maPhien = null; clearInterval(henGio);
+  $('manChinh').classList.add('an'); $('manDangNhap').classList.remove('an');
+  $('khoiChonXa').classList.add('an'); $('khoiSdt').classList.remove('an'); $('nutDn').textContent='Vào trang'; $('sdt').value='';
+});
+$('nutLamMoi').addEventListener('click', () => taiDuLieu());
+
+function moTrangChinh(){
+  $('manDangNhap').classList.add('an'); $('manChinh').classList.remove('an');
+  taiDuLieu();
+  clearInterval(henGio);
+  henGio = setInterval(() => { if (!document.hidden) taiDuLieu(true); }, 5 * 60 * 1000);
+}
+
+async function taiDuLieu(lang){
+  if (!lang) $('nutLamMoi').textContent = 'Đang tải…';
+  try {
+    const kq = await goi({ viec:'duLieu', ma: maPhien });
+    if (!kq.ok) {
+      if (kq.hetPhien) { $('nutThoat').click(); baoLoi(kq.loi); return; }
+      throw new Error(kq.loi);
+    }
+    veTrang(kq);
+  } catch(e) {
+    if (!lang) $('noiDung').innerHTML = `<div class="the"><div class="loi">Chưa tải được số liệu. ${esc(e.message||'')}</div></div>`;
+  } finally { $('nutLamMoi').textContent = 'Làm mới'; }
+}
+
+/* ---------- Xử lý số liệu ---------- */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function chuan(t){ return String(t).replace(/\s+/g,' ').trim(); }
+function docSo(s){
+  let t = String(s).trim().replace(/\s/g,'').replace(/%$/,'');
+  if (!/^-?[\d.,]+$/.test(t)) return null;
+  const c = t.lastIndexOf(','), d = t.lastIndexOf('.');
+  if (c >= 0 && d >= 0) t = c > d ? t.replace(/\./g,'').replace(',','.') : t.replace(/,/g,'');
+  else if (c >= 0) t = /^-?\d{1,3}(,\d{3})+$/.test(t) ? t.replace(/,/g,'') : t.replace(',','.');
+  else if (d >= 0 && /^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g,'');
+  const n = Number(t); return isFinite(n) ? n : null;
+}
+const dinhSo = (n, le) => n==null ? '–' : n.toLocaleString('vi-VN', { maximumFractionDigits: le==null ? 2 : le });
+const khoaTuan = (nam, so) => nam * 100 + so;
+
+/** Gộp các bản trong cùng một tuần: mỗi chỉ tiêu lấy số của bản gửi sau cùng. */
+function gopChiSo(baoCao){
+  const tuan = {}, thuTu = [], nhanTuan = {};
+  [...baoCao].sort((a,b) => a.ms - b.ms).forEach(b => {
+    const k = khoaTuan(b.nam, b.tuan);
+    nhanTuan[k] = nhanTuan[k] || b.nhanTuan;
+    tuan[k] = tuan[k] || {};
+    b.muc.forEach(([hoi, tl]) => {
+      const h = chuan(hoi);
+      if (!h.startsWith('[')) return;
+      const n = docSo(tl); if (n == null) return;
+      if (thuTu.indexOf(h) < 0) thuTu.push(h);
+      tuan[k][h] = n;
+    });
+  });
+  return { tuan, thuTu, nhanTuan };
+}
+
+function moiNhat(g, ten){
+  const ks = Object.keys(g.tuan).map(Number).sort((a,b)=>b-a);
+  for (const k of ks) if (g.tuan[k][ten] != null) return { v: g.tuan[k][ten], k };
+  return null;
+}
+
+const MOC_VON_NAM_NAY = [['2026-11-15',80],['2026-11-30',85],['2026-12-15',90],['2026-12-31',95],['2027-01-15',100]];
+function mucTieuHienTai(moc){
+  const hom = new Date(Date.now() + 7*3600e3).toISOString().slice(0,10);
+  for (const [ngay, pt] of moc) if (hom <= ngay) return { pt, ngay };
+  return { pt: 100, ngay: moc[moc.length-1][0] };
+}
+const ngayVn = s => s.slice(8,10) + '/' + s.slice(5,7) + '/' + s.slice(0,4);
+
+function oTienDo(nhan, tu, mau, mt, ghiThem){
+  if (!tu || !mau || !mau.v) return `<div class="o-td"><div class="nhan">${nhan}</div><div class="so bang">–</div><div class="ghi">Chưa có số liệu</div></div>`;
+  const pt = tu.v / mau.v * 100;
+  let lop = '';
+  if (mt) lop = pt >= mt.pt ? 'xanh' : (pt >= mt.pt - 10 ? 'vang' : 'do');
+  const muc = mt ? `Mục tiêu ${mt.pt}% trước ${ngayVn(mt.ngay)}` : '';
+  return `<div class="o-td ${lop}"><div class="nhan">${nhan}</div><div class="so">${dinhSo(pt,1)}%</div>
+    <div class="thanh"><i style="width:${Math.min(100,Math.max(0,pt)).toFixed(1)}%"></i></div>
+    <div class="ghi">${ghiThem(tu.v, mau.v)}${muc ? '<br>' + muc : ''}</div></div>`;
+}
+
+/* ---------- Vẽ trang ---------- */
+function veTrang(d){
+  $('tenXa').textContent = d.xa;
+  document.title = 'Báo cáo tuần — ' + d.xa;
+  const tn = d.tuanNay, kNay = khoaTuan(tn.nam, tn.so);
+  const banNay = d.baoCao.filter(b => khoaTuan(b.nam, b.tuan) === kNay);
+  const han = new Date(tn.han), quaHan = Date.now() > han.getTime();
+  const gioHan = '17h00 thứ Năm, ' + han.toLocaleDateString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh', day:'2-digit', month:'2-digit' });
+  let h = '';
+  if (thuNghiem) h += `<div class="thu-thach">Bản xem thử với số liệu giả. Trang thật sẽ đọc trực tiếp từ biểu mẫu báo cáo tuần sau khi Văn phòng Tỉnh ủy kết nối máy chủ.</div>`;
+
+  // 1. Tình trạng tuần này
+  let lop, ky, lon, phu;
+  if (banNay.length) { lop='dat'; ky='✓'; lon=`Đã gửi ${banNay.length} bản báo cáo`; phu=`${esc(tn.nhan)} · Hạn gửi ${gioHan}`; }
+  else if (!quaHan) { lop='cho'; ky='!'; lon='Chưa gửi báo cáo tuần này'; phu=`${esc(tn.nhan)} · Hạn gửi ${gioHan}`; }
+  else { lop='tre'; ky='!'; lon='Đã quá hạn, chưa gửi báo cáo'; phu=`${esc(tn.nhan)} · Hạn gửi ${gioHan}`; }
+  h += `<div class="the"><div class="tinh-trang ${lop}"><div class="dau-cham">${ky}</div><div style="flex:1">
+    <div class="lon">${lon}</div><div class="phu-de" style="margin:2px 0 0">${phu}</div>`;
+  if (banNay.length) {
+    h += '<ul class="ds-gui">' + banNay.map(b => `<li><span>${esc(b.boPhan || 'Đảng ủy')}</span><span>${esc(gioPhut(b.tg))}${b.ms > han.getTime() ? ' · sau hạn' : ''}</span></li>`).join('') + '</ul>';
+  }
+  h += '</div></div></div>';
+
+  // 2. Tiến độ các chỉ tiêu trọng tâm
+  const g = gopChiSo(d.baoCao);
+  const L = t => moiNhat(g, t);
+  const tyDong = (a, b) => `${dinhSo(a/1000,1)} / ${dinhSo(b/1000,1)} tỷ đồng`;
+  const coSo = (a, b) => `${dinhSo(a,0)} / ${dinhSo(b,0)} cơ sở`;
+  const mtVon = mucTieuHienTai(MOC_VON_NAM_NAY);
+  const duToan = L('[Cả năm] Dự toán thu ngân sách nhà nước HĐND cấp xã giao (triệu đồng)') || L('[Cả năm] Dự toán thu ngân sách nhà nước tỉnh giao (triệu đồng)');
+  const tongNd = L('[Tại ngày chốt] Tổng số cơ sở nhà, đất dôi dư trên địa bàn (cơ sở)') || L('[Tại ngày chốt] Tổng số cơ sở nhà, đất dôi dư trên địa bàn thuộc quản lý của địa phương (cơ sở)');
+  h += `<div class="the"><h2>Tiến độ chỉ tiêu trọng tâm</h2><p class="phu-de">Theo số liệu đơn vị báo cáo gần nhất. Xanh: đạt mốc; vàng: thấp hơn mốc dưới 10 điểm; đỏ: thấp hơn từ 10 điểm.</p><div class="luoi-tien-do">`
+    + oTienDo('Giải ngân vốn đầu tư công năm nay', L('[Lũy kế từ đầu năm] Giải ngân vốn kế hoạch năm nay (triệu đồng)'), L('[Tại ngày chốt] Kế hoạch vốn năm nay sau điều chỉnh, bổ sung (triệu đồng)'), mtVon, tyDong)
+    + oTienDo('Giải ngân vốn năm trước chuyển sang', L('[Lũy kế từ đầu năm] Giải ngân vốn năm trước chuyển sang (triệu đồng)'), L('[Tại ngày chốt] Kế hoạch vốn năm trước được kéo dài sang năm nay (triệu đồng)'), { pt:100, ngay:'2026-12-31' }, tyDong)
+    + oTienDo('Thu ngân sách so với dự toán', L('[Lũy kế từ đầu năm] Thu ngân sách nhà nước (triệu đồng)'), duToan, null, tyDong)
+    + oTienDo('Nhà, đất dôi dư đã xử lý xong', L('[Tại ngày chốt] Số cơ sở đã xử lý xong, đưa vào khai thác, sử dụng (cơ sở)'), tongNd, { pt:100, ngay:'2027-01-05' }, coSo)
+    + '</div></div>';
+
+  // 3. Bảng số liệu so với tuần trước
+  const cacTuan = Object.keys(g.tuan).map(Number).sort((a,b)=>b-a);
+  if (cacTuan.length) {
+    const kA = cacTuan.indexOf(kNay) >= 0 ? kNay : cacTuan[0];
+    const kB = cacTuan.find(k => k < kA);
+    const nhan = k => { const m = String(g.nhanTuan[k]||'').match(/Tuần\s*\d+/); return m ? m[0] : 'Tuần ' + (k % 100); };
+    const dong = g.thuTu.filter(t => g.tuan[kA][t] != null || (kB && g.tuan[kB][t] != null));
+    h += `<div class="the"><h2>Số liệu đã báo cáo</h2><p class="phu-de">${esc(nhan(kA))}${kB ? ' so với ' + esc(nhan(kB)) : ''}. Tuần có nhiều bản gửi thì lấy số của bản gửi sau cùng.</p>
+      <div class="bang-wrap"><table><thead><tr><th>Chỉ tiêu</th><th class="so">${esc(nhan(kA))}</th>${kB ? `<th class="so">${esc(nhan(kB))}</th>` : ''}</tr></thead><tbody>`;
+    dong.forEach(t => {
+      const m = t.match(/^\[([^\]]+)\]\s*(.*)$/); const ky = m ? m[1] : '', ten = m ? m[2] : t;
+      const a = g.tuan[kA][t], b = kB ? g.tuan[kB][t] : null;
+      let cl = '';
+      if (a != null && b != null) { const x = a - b; cl = x > 0 ? `<span class="tang">▲ ${dinhSo(x)}</span>` : x < 0 ? `<span class="giam">▼ ${dinhSo(-x)}</span>` : '<span class="bang">＝</span>'; }
+      const lech = /triệu đồng/.test(t) && a != null && a >= 1e6 ? '<span class="canh">Số trên 1.000 tỷ đồng, đề nghị kiểm tra lại đơn vị tính (triệu đồng)</span>' : '';
+      h += `<tr><td><span class="ky">${esc(ky)}</span>${esc(ten)}${lech}</td><td class="so">${dinhSo(a)}${cl ? `<span class="chenh">${cl}</span>` : ''}</td>${kB ? `<td class="so">${dinhSo(b)}</td>` : ''}</tr>`;
+    });
+    h += '</tbody></table></div></div>';
+  }
+
+  // 4. Các bản đã gửi
+  h += `<div class="the"><h2>Các bản báo cáo đã gửi</h2><p class="phu-de">${d.baoCao.length} bản, mới nhất ở trên. Bấm vào từng tuần để xem nội dung.</p>`;
+  if (!d.baoCao.length) h += '<p class="rong">Đơn vị chưa gửi bản báo cáo nào qua biểu mẫu.</p>';
+  const theoTuan = new Map();
+  d.baoCao.forEach(b => { const k = khoaTuan(b.nam, b.tuan); if (!theoTuan.has(k)) theoTuan.set(k, []); theoTuan.get(k).push(b); });
+  let dau = true;
+  theoTuan.forEach((ds, k) => {
+    h += `<details class="tuan"${dau ? ' open' : ''}><summary><span>${esc(ds[0].nhanTuan)}</span><span class="bang" style="font-weight:400">${ds.length} bản</span></summary>`;
+    ds.forEach(b => {
+      h += `<div class="ban"><div class="tieu">${esc(b.boPhan || 'Đảng ủy')} · gửi lúc ${esc(gioPhut(b.tg))}</div><dl>`
+        + (b.muc.length ? b.muc.map(([q, a]) => `<dt>${esc(chuan(q))}</dt><dd>${esc(a)}</dd>`).join('') : '<dd class="rong">Bản gửi không có nội dung.</dd>')
+        + '</dl></div>';
+    });
+    h += '</details>'; dau = false;
+  });
+  h += '</div>';
+
+  $('noiDung').innerHTML = h;
+  const lc = new Date(d.capNhat).toLocaleString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit', year:'numeric' });
+  $('chanTrang').innerHTML = `${d.ten ? 'Đồng chí ' + esc(d.ten) + ' · ' : ''}Số liệu đọc trực tiếp từ biểu mẫu báo cáo tuần, cập nhật lúc ${lc}<br>Văn phòng Tỉnh ủy Quảng Trị · ĐTH-VPTU`;
+}
+function gioPhut(tg){ const m = String(tg).match(/(\d{1,2})\/(\d{1,2})\/\d{4}\s+(\d{1,2}):(\d{2})/); return m ? `${m[3].padStart(2,'0')}:${m[4]} ngày ${m[1].padStart(2,'0')}/${m[2].padStart(2,'0')}` : tg; }
+
+/* ---------- Số liệu giả cho bản xem thử ---------- */
+function giaLap(yc){
+  if (yc.viec === 'dangNhap') {
+    const s = String(yc.sdt||'').replace(/\D/g,'');
+    if (s.length < 10) return { ok:false, loi:'Số điện thoại chưa đúng (cần đủ 10 số).' };
+    return { ok:true, ma:'thu', xa:'Xã Mẫu', ten:'Nguyễn Văn A' };
+  }
+  const now = Date.now(), ms = n => now - n*864e5;
+  return { ok:true, xa:'Xã Mẫu', ten:'Nguyễn Văn A', capNhat:new Date().toISOString(),
+    tuanNay:{ so:46, nam:2026, nhan:'Tuần 46 (09/11–15/11/2026)', han:'2026-11-12T10:00:00.000Z' },
+    baoCao:[
+      { tg:'12/11/2026 7:53:40', ms:ms(0), tuan:46, nam:2026, nhanTuan:'Tuần 46 (09/11–15/11/2026)', boPhan:'Văn phòng Đảng ủy', muc:[
+        ['[Trong kỳ] Số đảng viên mới kết nạp (đảng viên)','2'],['[Lũy kế từ đầu năm] Số đảng viên mới kết nạp (đảng viên)','31'],
+        ['[Trong kỳ] Số cuộc kiểm tra (cuộc)','1'],['Kết quả nổi bật trong kỳ','Tổ chức Ngày hội Đại đoàn kết toàn dân tộc tại các thôn.\nHoàn thành số hóa hồ sơ đảng viên.']]},
+      { tg:'11/11/2026 16:21:21', ms:ms(1), tuan:46, nam:2026, nhanTuan:'Tuần 46 (09/11–15/11/2026)', boPhan:'Phòng Kinh tế', muc:[
+        ['[Tại ngày chốt] Kế hoạch vốn năm nay sau điều chỉnh, bổ sung (triệu đồng)','52.400'],['[Lũy kế từ đầu năm] Giải ngân vốn kế hoạch năm nay (triệu đồng)','40.150'],
+        ['[Tại ngày chốt] Kế hoạch vốn năm trước được kéo dài sang năm nay (triệu đồng)','6.800'],['[Lũy kế từ đầu năm] Giải ngân vốn năm trước chuyển sang (triệu đồng)','5.210'],
+        ['[Cả năm] Dự toán thu ngân sách nhà nước HĐND cấp xã giao (triệu đồng)','18.000'],['[Lũy kế từ đầu năm] Thu ngân sách nhà nước (triệu đồng)','14.920'],
+        ['[Tại ngày chốt] Tổng số cơ sở nhà, đất dôi dư trên địa bàn (cơ sở)','9'],['[Tại ngày chốt] Số cơ sở đã xử lý xong, đưa vào khai thác, sử dụng (cơ sở)','3'],
+        ['Khó khăn, vướng mắc và đề xuất, kiến nghị về giải ngân','Dự án đường liên thôn vướng mặt bằng 0,4 ha.']]},
+      { tg:'05/11/2026 16:58:27', ms:ms(7), tuan:45, nam:2026, nhanTuan:'Tuần 45 (02/11–08/11/2026)', boPhan:'Văn phòng Đảng ủy', muc:[
+        ['[Lũy kế từ đầu năm] Số đảng viên mới kết nạp (đảng viên)','29'],['[Tại ngày chốt] Kế hoạch vốn năm nay sau điều chỉnh, bổ sung (triệu đồng)','52.400'],
+        ['[Lũy kế từ đầu năm] Giải ngân vốn kế hoạch năm nay (triệu đồng)','36.900'],['[Lũy kế từ đầu năm] Thu ngân sách nhà nước (triệu đồng)','14.100'],
+        ['[Tại ngày chốt] Số cơ sở đã xử lý xong, đưa vào khai thác, sử dụng (cơ sở)','2'],['Kết quả nổi bật trong kỳ','Hội nghị Ban Thường vụ Đảng ủy xã.']]}
+    ]};
+}
+
+if (maPhien) moTrangChinh();
+})();
+</script>
+</body>
+</html>
