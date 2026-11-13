@@ -155,6 +155,7 @@ details.tuan[open]>summary::after{content:"－"}
 .rong{color:var(--ink-3);font-style:italic}
 footer{color:var(--ink-2);font-size:12px;text-align:center;padding:4px 16px 28px}
 .dang-tai{color:var(--ink-2);text-align:center;padding:60px 0}
+tbody tr.nhom-ct td{background:var(--surface-2);font-weight:700;color:var(--ink);font-size:13px;padding-top:10px;border-top:2px solid var(--line)}
 </style>
 </head>
 <body>
@@ -442,16 +443,37 @@ async function veTrang(d){
     const kA = cacTuan.indexOf(kNay) >= 0 ? kNay : cacTuan[0];
     const kB = cacTuan.find(k => k < kA);
     const nhan = k => 'Tuần ' + (k % 100);
-    const dong = g.thuTu.filter(t => g.tuan[kA][t] != null || (kB && g.tuan[kB][t] != null));
-    h += `<section class="panel"><header><h2>Số liệu đã báo cáo</h2><span class="chuthich">${nhan(kA)}${kB ? ' so với ' + nhan(kB) : ''}; tuần có nhiều bản gửi thì lấy số của bản gửi sau cùng</span></header><div class="than"><div class="bang-wrap"><table><thead><tr><th>Chỉ tiêu</th><th class="so">${nhan(kA)}</th>${kB ? `<th class="so">${nhan(kB)}</th>` : ''}</tr></thead><tbody>`;
-    dong.forEach(t => {
+    // Chỉ hiện chỉ tiêu có trong kỳ đang xem (bỏ chỉ tiêu cũ không còn khảo sát), bỏ lượt khách du lịch; gom theo nhóm
+    const dong0 = g.thuTu.filter(t => g.tuan[kA][t] != null && !/khách du lịch/i.test(t));
+    const NHOM_CT = [
+      ['Xây dựng Đảng, hệ thống chính trị', /đảng viên|kiểm tra|giám sát|kỷ luật|hội nghị|kiểm điểm|KPI|OKR|Bí thư|đối thoại/i],
+      ['Giải ngân vốn đầu tư công', /giải ngân|kế hoạch vốn|vốn đề nghị điều chuyển|mục tiêu quốc gia/i],
+      ['Thu ngân sách nhà nước', /thu ngân sách|dự toán|tiền sử dụng đất|cùng kỳ/i],
+      ['Nhà, đất dôi dư', /dôi dư|\] Số cơ sở/i],
+      ['Văn hóa - xã hội', /lao động|đào tạo nghề|hộ nghèo|cận nghèo|hoàn cảnh khó khăn|an sinh|khám sức khỏe|nhà ở được|suất quà/i],
+      ['Hành chính, chuyển đổi số', /thủ tục hành chính|hồ sơ|dịch vụ công|VNeID|kỹ năng số|Luồng xanh|nền tảng số/i],
+      ['An ninh, trật tự, quốc phòng', /phạm tội|vi phạm pháp luật|tai nạn|khiếu nại|đơn thư|giao quân|nhập ngũ|an ninh/i],
+      ['Giải phóng mặt bằng, khó khăn, vướng mắc', /mặt bằng|bồi thường|tái định cư|điểm nghẽn/i],
+      ['Sản xuất nông, lâm nghiệp, thủy sản', /cây trồng|gia súc|gia cầm|rừng|thủy sản/i],
+      ['Phòng, chống thiên tai', /thiên tai|sạt lở|lũ quét/i],
+      ['Doanh nghiệp, hạ tầng, môi trường', /./]];
+    const THU_TU = ['Xây dựng Đảng, hệ thống chính trị', 'Giải ngân vốn đầu tư công', 'Thu ngân sách nhà nước', 'Nhà, đất dôi dư', 'Giải phóng mặt bằng, khó khăn, vướng mắc', 'Doanh nghiệp, hạ tầng, môi trường', 'Sản xuất nông, lâm nghiệp, thủy sản', 'Phòng, chống thiên tai', 'Văn hóa - xã hội', 'Hành chính, chuyển đổi số', 'An ninh, trật tự, quốc phòng'];
+    const nhomCua = t => (NHOM_CT.find(([, re]) => re.test(t)) || NHOM_CT[NHOM_CT.length - 1])[0];
+    const theoNhom = new Map(THU_TU.map(n => [n, []]));
+    dong0.forEach(t => theoNhom.get(nhomCua(t)).push(t));
+    h += `<section class="panel"><header><h2>Số liệu đã báo cáo</h2><span class="chuthich">${nhan(kA)}${kB ? ' so với ' + nhan(kB) : ''}; xếp theo nhóm, chỉ gồm các chỉ tiêu được khảo sát trong tuần; tuần có nhiều bản gửi thì lấy số của bản gửi sau cùng</span></header><div class="than"><div class="bang-wrap"><table><thead><tr><th>Chỉ tiêu</th><th class="so">${nhan(kA)}</th>${kB ? `<th class="so">${nhan(kB)}</th>` : ''}</tr></thead><tbody>`;
+    theoNhom.forEach((ds, ten) => { if (!ds.length) return;
+      h += `<tr class="nhom-ct"><td colspan="${kB ? 3 : 2}">${esc(ten)}</td></tr>`;
+      ds.forEach(t => {
       const m = t.match(/^\[([^\]]+)\]\s*(.*)$/); const ky = m ? m[1] : '', ten = m ? m[2] : t;
       const a = g.tuan[kA][t], b = kB ? g.tuan[kB][t] : null;
       let cl = '';
       if (a != null && b != null) { const x = a - b; cl = x > 0 ? `<span class="tang">▲ ${dinhSo(x)}</span>` : x < 0 ? `<span class="giam">▼ ${dinhSo(-x)}</span>` : '<span class="bang">＝</span>'; }
       const lech = /triệu đồng/.test(t) && a != null && a >= 1e6 ? '<span class="canh">Số trên 1.000 tỷ đồng, đề nghị kiểm tra lại đơn vị tính (triệu đồng)</span>' : '';
       h += `<tr><td><span class="tag">${esc(ky)}</span>${esc(ten)}${lech}</td><td class="so num">${dinhSo(a)}${cl ? `<span class="chenh">${cl}</span>` : ''}</td>${kB ? `<td class="so num">${dinhSo(b)}</td>` : ''}</tr>`;
+      });
     });
+    if (!dong0.length) h += `<tr><td colspan="${kB ? 3 : 2}" class="rong">${nhan(kA)} đơn vị chưa có số liệu.</td></tr>`;
     h += '</tbody></table></div></div></section>';
   }
 
