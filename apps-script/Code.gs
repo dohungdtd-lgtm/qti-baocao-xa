@@ -46,6 +46,8 @@ function caiDat() {
     tc.setProperty('ID_TAI_KHOAN', id);
   }
   Logger.log('Danh sách tài khoản: https://docs.google.com/spreadsheets/d/' + id + '/edit');
+  // Có khóa đọc Quang Tri Weekly Index (thuộc tính WI_SDT) thì bật luôn đồng bộ 10 phút/lần
+  if (tc.getProperty('WI_SDT') && typeof caiDongBoWI === 'function') caiDongBoWI();
 }
 
 /** Tên các đơn vị đã từng báo cáo (cột "Đơn vị"), sắp theo bảng chữ cái. */
