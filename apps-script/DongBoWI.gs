@@ -61,6 +61,7 @@ function dongBoWI(epBuoc) {
     capNhat: new Date().toISOString(),
     hien: theTuan_(shell, 'hien'), tiep: theTuan_(shell, 'tiep'),
     ngay: ((shell.match(/class="diadanh">([^<]+)</) || [])[1] || '').trim(),
+    ngayChot: (shell.match(/QX_NGAY_CHOT='([\d-]+)'/) || [])[1] || null, // ngày chốt dùng để tính mốc cảnh báo
   };
   const tachXa = tachTheoXa_(rieng, raw);
   luuWI_(meta, tachXa);
@@ -79,6 +80,14 @@ function tachTheoXa_(r, raw) {
   const kq = {};
   const lay = x => kq[x] || (kq[x] = { chiSo: null, kiemTra: [], duAn: [], nhaDat: [], truSo: null, nhiemVu: [] });
   (r.xa || []).forEach(x => { lay(x.xa).chiSo = x; });
+  // Lịch sử từng chỉ số theo kỳ cập nhật (để so sánh với kỳ trước liền kề và vẽ biểu đồ)
+  (r.ls || []).forEach(l => {
+    if (l.nhom !== 'xa' || !l.xa || l.so == null) return;
+    const truong = String(l.ma || '').split('|')[1]; if (!truong) return;
+    const o = lay(l.xa); o.lichSu = o.lichSu || {};
+    (o.lichSu[truong] = o.lichSu[truong] || []).push([l.ky, l.so]);
+  });
+  Object.keys(kq).forEach(x => { const ls = kq[x].lichSu || {}; Object.keys(ls).forEach(t => ls[t].sort((a, b) => a[0] < b[0] ? -1 : 1)); });
   (r.kt || []).forEach(x => lay(x.xa).kiemTra.push({ ma: x.ma, chiTieu: x.chi_tieu, chiTiet: x.chi_tiet }));
   (r.da || []).forEach(x => lay(x.xa).duAn.push(x));
   (r.ndt || []).forEach(x => { if (x.cap === 'Cấp xã' && x.xa) lay(x.xa).nhaDat.push({
@@ -98,11 +107,32 @@ function tachTheoXa_(r, raw) {
   return kq;
 }
 
+/** Các chỉ số Weekly Index dùng để so sánh với xã giáp ranh trên bản đồ (đúng danh sách chỉ tiêu bản đồ cấp tỉnh). */
+const CS_WI = ['tl_gn', 'tl_gn_nt', 'nd_pct_xong', 'tl_thu', 'khcn_tl', 'ld_tl', 'ct_tl', 'gn_lk', 'thu_lk', 'dv_ket_nap_lk',
+  'viec_lam', 'kham_sk', 'ky_nang_so', 'tthc_dung_han', 'can_kiem_tra'];
+
+/** Bảng chỉ số của mọi xã: { xã: { chỉSố: [giá trị hiện tại, giá trị kỳ trước liền kề, ngày kỳ này, ngày kỳ trước] } }. */
+function tongHopChiSo_(tachXa) {
+  const th = {};
+  Object.keys(tachXa).forEach(x => {
+    const c = tachXa[x].chiSo; if (!c) return;
+    const ls = tachXa[x].lichSu || {}, o = {};
+    CS_WI.forEach(t => {
+      if (c[t] == null && !ls[t]) return;
+      const h = ls[t] || [], cuoi = h[h.length - 1], truoc = h.length > 1 ? h[h.length - 2] : null;
+      o[t] = [c[t] == null ? (cuoi ? cuoi[1] : null) : c[t], truoc ? truoc[1] : null, cuoi ? cuoi[0] : null, truoc ? truoc[0] : null];
+    });
+    th[x] = o;
+  });
+  return th;
+}
+
 function luuWI_(meta, tachXa) {
   const ss = SpreadsheetApp.openById(CAU_HINH.ID_TAI_KHOAN);
   let sh = ss.getSheetByName(WI_TAB);
   if (!sh) { sh = ss.insertSheet(WI_TAB); sh.hideSheet(); }
-  const MANH = 45000, hang = [['__meta__'].concat(chia_(JSON.stringify(meta), MANH))];
+  const MANH = 45000, hang = [['__meta__'].concat(chia_(JSON.stringify(meta), MANH)),
+    ['__tonghop__'].concat(chia_(JSON.stringify(tongHopChiSo_(tachXa)), MANH))];
   Object.keys(tachXa).sort().forEach(x => hang.push([x].concat(chia_(JSON.stringify(tachXa[x]), MANH))));
   const rong = Math.max.apply(null, hang.map(h => h.length));
   sh.clearContents();
@@ -111,18 +141,23 @@ function luuWI_(meta, tachXa) {
 
 function chia_(s, n) { const a = []; for (let i = 0; i < s.length; i += n) a.push(s.slice(i, i + n)); return a.length ? a : ['']; }
 
-/** Phần Weekly Index của một xã (giữ tạm 10 phút, làm mới ngay khi có bản đồng bộ mới). */
-function wiCuaXa(xa) {
+/**
+ * Phần Weekly Index của một xã (giữ tạm 10 phút, làm mới ngay khi có bản đồng bộ mới).
+ * Kèm chỉ số của các xã giáp ranh (chỉ các con số trong CS_WI) để tô bản đồ.
+ */
+function wiCuaXa(xa, dsLanCan) {
   const phien = PropertiesService.getScriptProperties().getProperty('WI_PHIEN');
   if (!phien) return null;
   const dem = CacheService.getScriptCache();
-  const khoa = 'wi:' + phien + ':' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, xa, Utilities.Charset.UTF_8));
+  const khoa = 'wi2:' + phien + ':' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, xa, Utilities.Charset.UTF_8));
   const co = dem.get(khoa); if (co) return JSON.parse(co);
   const sh = SpreadsheetApp.openById(CAU_HINH.ID_TAI_KHOAN).getSheetByName(WI_TAB);
   if (!sh) return null;
   const v = sh.getDataRange().getValues();
   const doc = ten => { const h = v.find(r => r[0] === ten); return h ? JSON.parse(h.slice(1).join('')) : null; };
-  const kq = { meta: doc('__meta__'), xa: doc(xa) };
+  const th = doc('__tonghop__') || {}, lc = {};
+  [xa].concat(dsLanCan || []).forEach(x => { if (th[x]) lc[x] = th[x]; });
+  const kq = { meta: doc('__meta__'), xa: doc(xa), lanCan: lc };
   const s = JSON.stringify(kq); if (s.length < 95000) dem.put(khoa, s, 600);
   return kq;
 }

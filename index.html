@@ -155,6 +155,50 @@ details.tuan[open]>summary::after{content:"－"}
 .rong{color:var(--ink-3);font-style:italic}
 footer{color:var(--ink-2);font-size:12px;text-align:center;padding:4px 16px 28px}
 .dang-tai{color:var(--ink-2);text-align:center;padding:60px 0}
+
+/* Hàng thẻ chỉ số */
+.hang-the{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+@media (max-width:640px){.hang-the{grid-template-columns:1fr 1fr;gap:8px}.hang-the .the{padding:10px}.hang-the .the .t{font-size:12px}.hang-the .the .g{font-size:11.5px}.hang-the .the:first-child{grid-column:1/-1}}
+button.the{font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%}
+button.the:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.the.dang-chon{outline:2.5px solid var(--gold);outline-offset:1px}
+.the .so{font-size:24px}
+/* Bản đồ chỉ số */
+.chon-ct{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:600;font-size:13px}
+.chon-ct select{flex:1 1 260px;min-width:0;max-width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-weight:500}
+.tom-tat{margin:10px 0 0;font-size:13.5px;line-height:1.55}
+.bd-lc{stroke:#fff;stroke-width:1.4;vector-effect:non-scaling-stroke}
+.bd-xa{stroke:var(--ink)!important;stroke-width:2.6!important}
+.nhan-so{font:700 13px var(--f-ui);fill:var(--ink);paint-order:stroke;stroke:rgba(255,255,255,.92);text-anchor:middle;pointer-events:none}
+.nhan-bd.chinh{fill:var(--ink);stroke:rgba(255,255,255,.92)}
+/* So sánh xã giáp ranh */
+.ss{display:grid;gap:7px}
+.ss-dong{display:grid;grid-template-columns:minmax(80px,30%) 1fr auto;align-items:center;gap:8px;font-size:13px}
+.ss-dong.minh{font-weight:700}
+.ss-dong.minh .ss-ten{color:var(--brand)}
+.ss-ten{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ss-truc{position:relative;height:14px;background:var(--surface-2);border-radius:4px}
+.ss-truc i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.ss-dong.minh .ss-truc i{box-shadow:inset 0 0 0 2px var(--ink)}
+.ss-truc b{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--ink)}
+.ss-so{text-align:right;white-space:nowrap;min-width:92px}
+.ss-ch{display:block;font-size:11.5px;font-weight:600}
+/* Diễn biến */
+svg.db{display:block;width:100%;height:auto}
+.db-so{font:600 11.5px var(--f-ui);fill:var(--ink-2)}.db-so.cuoi{font-weight:700;fill:var(--ink)}
+.db-nhan{font:500 11px var(--f-ui);fill:var(--ink-3)}
+.db-moc{font:500 10.5px var(--f-ui);fill:var(--ink-3)}
+/* Biểu số liệu */
+table.bieu tbody tr[data-ct]{cursor:pointer}
+table.bieu tbody tr[data-ct]:hover td{background:color-mix(in srgb,var(--gold) 14%,var(--surface))}
+table.bieu tbody tr.dang-chon td{background:color-mix(in srgb,var(--gold) 26%,var(--surface))!important}
+table.bieu td.so{vertical-align:middle}
+tbody tr.nhom-ct.mo td{background:var(--brand);color:var(--on-brand);border-top:0}
+tbody tr.nhom-ct.mo .dv{color:var(--on-brand);opacity:.85}
+tbody tr.nhom-con td{background:var(--surface-2);font-weight:700;font-size:12.5px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
+.dv{color:var(--ink-3);font-size:12px;font-weight:400}
+svg.spark{width:84px;height:24px;vertical-align:middle}
+@media (max-width:640px){.an-dt{display:none}.the .so{font-size:21px}}
 tbody tr.nhom-ct td{background:var(--surface-2);font-weight:700;color:var(--ink);font-size:13px;padding-top:10px;border-top:2px solid var(--line)}
 </style>
 </head>
@@ -169,7 +213,7 @@ tbody tr.nhom-ct td{background:var(--surface-2);font-weight:700;color:var(--ink)
       <div id="khoiSdt" style="display:grid;gap:10px">
         <label for="sdt">Số điện thoại của đồng chí</label>
         <input id="sdt" class="o-nhap" type="tel" inputmode="numeric" autocomplete="tel" placeholder="09xx xxx xxx" required>
-        <p class="goi-y">Số điện thoại Chánh Văn phòng Đảng ủy đã đăng ký với Văn phòng Tỉnh ủy. Trang chỉ hiện báo cáo của đơn vị mình.</p>
+        <p class="goi-y">Số điện thoại đã đăng ký với Văn phòng Tỉnh ủy (Bí thư Đảng ủy, Chủ tịch UBND, Chánh Văn phòng Đảng ủy). Trang chỉ hiện số liệu của đơn vị mình.</p>
       </div>
       <div id="khoiChonXa" class="an" style="display:grid;gap:10px">
         <label for="chonXa">Chọn đơn vị cần xem</label>
@@ -209,7 +253,7 @@ const luu = {
   xoa(){ try { localStorage.removeItem(KHOA_LUU); } catch(e){} }
 };
 const thuNghiem = !DIA_CHI_MAY_CHU;
-let maPhien = luu.lay(), henGio = null, duLieuCuoi = null, chiTieuBd = 'gn', banDo = null, sdtDaNhap = '';
+let maPhien = luu.lay(), henGio = null, duLieuCuoi = null, chiTieuBd = 'wi:tl_gn', banDo = null, sdtDaNhap = '';
 
 /* ---------- Máy chủ ---------- */
 async function goi(yc){
@@ -315,74 +359,238 @@ const mau = (pt, mt) => pt == null ? '' : !mt ? '' : pt >= mt.pt ? 'xanh' : pt >
 const MAU_HEX = { xanh:'var(--good)', vang:'var(--warn)', do:'var(--crit)', '':'var(--neutral)' };
 const TEN_MAU = { xanh:'Đạt mốc', vang:'Cảnh báo', do:'Báo động', '':'Theo dõi' };
 
-/** Bốn chỉ tiêu trọng tâm, tính từ số đơn vị báo cáo gần nhất. */
-function chiTieuTrongTam(g){
-  const L = t => moiNhat(g, t);
-  const ty = (a,b) => `${dinhSo(a/1000,1)} / ${dinhSo(b/1000,1)} tỷ đồng`;
-  const cs = (a,b) => `${dinhSo(a,0)} / ${dinhSo(b,0)} cơ sở`;
-  const mk = (ma, ten, tu, mauSo, mt, ghi) => {
-    const pt = tu && mauSo && mauSo.v ? tu.v / mauSo.v * 100 : null;
-    return { ma, ngan: {gn:'Giải ngân',gnnt:'Vốn năm trước',nd:'Nhà, đất dôi dư',thu:'Thu ngân sách'}[ma], ten, pt, mt, lop: mau(pt, mt), ghi: pt == null ? 'Chưa có số liệu' : ghi(tu.v, mauSo.v) };
-  };
-  return [
-    mk('gn','Giải ngân vốn đầu tư công năm nay', L('[Lũy kế từ đầu năm] Giải ngân vốn kế hoạch năm nay (triệu đồng)'), L('[Tại ngày chốt] Kế hoạch vốn năm nay sau điều chỉnh, bổ sung (triệu đồng)'), mocHienTai(MOC_VON), ty),
-    mk('gnnt','Giải ngân vốn năm trước chuyển sang', L('[Lũy kế từ đầu năm] Giải ngân vốn năm trước chuyển sang (triệu đồng)'), L('[Tại ngày chốt] Kế hoạch vốn năm trước được kéo dài sang năm nay (triệu đồng)'), {pt:100, ngay:'2026-12-31'}, ty),
-    mk('nd','Nhà, đất dôi dư đã xử lý xong', L('[Tại ngày chốt] Số cơ sở đã xử lý xong, đưa vào khai thác, sử dụng (cơ sở)'), L('[Tại ngày chốt] Tổng số cơ sở nhà, đất dôi dư trên địa bàn (cơ sở)') || L('[Tại ngày chốt] Tổng số cơ sở nhà, đất dôi dư trên địa bàn thuộc quản lý của địa phương (cơ sở)'), {pt:100, ngay:'2027-01-05'}, cs),
-    mk('thu','Thu ngân sách so với dự toán', L('[Lũy kế từ đầu năm] Thu ngân sách nhà nước (triệu đồng)'), L('[Cả năm] Dự toán thu ngân sách nhà nước HĐND cấp xã giao (triệu đồng)') || L('[Cả năm] Dự toán thu ngân sách nhà nước tỉnh giao (triệu đồng)'), null, ty),
-  ];
+/* ---------- Bộ chỉ số (cùng danh sách, mốc và màu với Quang Tri Weekly Index) ---------- */
+const CS_WI_DS = [
+  ['tl_gn','Tỷ lệ giải ngân vốn năm nay','%','gn_nam'],
+  ['tl_gn_nt','Tỷ lệ giải ngân vốn năm trước chuyển sang','%','gn_nt'],
+  ['nd_pct_xong','Nhà, đất dôi dư đã xử lý xong','%','nhadat'],
+  ['tl_thu','Thu ngân sách so dự toán','%','tien_do_nam'],
+  ['khcn_tl','Giải ngân vốn KHCN, ĐMST, CĐS','%','khcn'],
+  ['ld_tl','Thửa đất đạt chuẩn CSDL đất đai','%','ldat'],
+  ['ct_tl','Giải ngân vốn các chương trình MTQG','%',null],
+  ['gn_lk','Giải ngân vốn năm nay','triệu đồng',null],
+  ['thu_lk','Thu ngân sách lũy kế','triệu đồng',null],
+  ['dv_ket_nap_lk','Đảng viên kết nạp lũy kế','đảng viên',null],
+  ['viec_lam','Lao động được giải quyết việc làm','người',null],
+  ['kham_sk','Người được khám sức khỏe','người',null],
+  ['ky_nang_so','Người được hướng dẫn kỹ năng số','người',null],
+  ['tthc_dung_han','Hồ sơ TTHC giải quyết đúng hạn','%','tthc'],
+  ['can_kiem_tra','Số liệu cần kiểm tra lại','trường hợp','kiem_tra'],
+];
+const QX_MOC = {
+  gn_nam:[['2026-11-15',80],['2026-11-30',85],['2026-12-15',90],['2026-12-31',95],['2027-01-15',100]],
+  gn_nt:[['2026-11-15',85],['2026-11-30',90],['2026-12-15',95],['2026-12-31',100]],
+  ldat:[['2026-11-15',95],['2026-12-01',100]],
+  nhadat:[['2026-11-15',30],['2026-11-30',50],['2026-12-15',70],['2026-12-31',90],['2027-01-05',100]]};
+let NGAY_CHOT = homNay();
+function mocCua(q){
+  if (QX_MOC[q]) return QX_MOC[q].find(m => m[0] >= NGAY_CHOT) || QX_MOC[q][QX_MOC[q].length-1];
+  if (q === 'tien_do_nam') { const [y,m,dd] = NGAY_CHOT.split('-').map(Number), d = new Date(y,m-1,dd), a = new Date(y,0,1), b = new Date(y+1,0,1); return [NGAY_CHOT, Math.round((d-a)/(b-a)*1000)/10]; }
+  return q === 'khcn' ? [NGAY_CHOT,75] : q === 'tthc' ? [NGAY_CHOT,95] : null;
+}
+function trangThai(q, v){
+  if (!q) return null;
+  if (v == null || isNaN(v)) return 'neutral';
+  if (q === 'kiem_tra') return v === 0 ? 'good' : v <= 3 ? 'warn' : 'crit';
+  const m = mocCua(q); if (!m) return null;
+  return v >= m[1] ? 'good' : v >= m[1] - 10 ? 'warn' : 'crit';
+}
+function mocChu(q){
+  if (q === 'kiem_tra') return '0 là an toàn; 1–3 cảnh báo; trên 3 báo động';
+  const m = mocCua(q); if (!m) return '';
+  if (q === 'tien_do_nam') return `mốc theo tiến độ thời gian ${dinhSo(m[1],1)}% tại ${ngayVn(m[0])}`;
+  return QX_MOC[q] ? `mốc ${m[1]}% trước ${ngayVn(m[0])}` : `mốc từ ${m[1]}%`;
+}
+const ST_MAU = { good:'var(--good)', warn:'var(--warn)', crit:'var(--crit)', neutral:'var(--neutral)' };
+const ST_TEN = { good:'An toàn', warn:'Cảnh báo', crit:'Báo động', neutral:'Chưa có số liệu' };
+const ST_LOP = { good:'xanh', warn:'vang', crit:'do', neutral:'' };
+const THANG_XANH = ['#DCE7F2','#AFC6DE','#7FA2C7','#4F7CAD','#2C5687'];
+const ngayNgan = k => k ? k.slice(8,10) + '/' + k.slice(5,7) : '';
+const tenTat = t => t.replace(/^(Xã|Phường|Đặc khu)\s+/, '');
+function tuanTruoc(k){ const nam = Math.floor(k/100), so = k % 100; return so > 1 ? k - 1 : (nam-1)*100 + 52; }
+
+function dinhGT(v, dv, ngan){
+  if (v == null || isNaN(v)) return '–';
+  if (dv === '%') return dinhSo(v, 1) + '%';
+  if (dv === 'triệu đồng') return ngan ? dinhSo(v/1000, 1) + ' tỷ' : dinhSo(v, 0);
+  return dinhSo(v, Number.isInteger(v) ? 0 : 1);
+}
+function chenhLech(cur, prev, dv){
+  if (cur == null || prev == null) return '';
+  const x = Math.round((cur - prev) * 100) / 100;
+  const dvChenh = dv === '%' ? ' điểm %' : dv === 'triệu đồng' ? ' tr.đ' : '';
+  if (x > 0) return `<span class="tang">▲ ${dinhSo(x, dv === '%' ? 1 : 2)}${dvChenh}</span>`;
+  if (x < 0) return `<span class="giam">▼ ${dinhSo(-x, dv === '%' ? 1 : 2)}${dvChenh}</span>`;
+  return '<span class="bang">＝ không đổi</span>';
 }
 
-/** Chỉ tiêu trọng tâm lấy từ Quang Tri Weekly Index (số đã chốt, ưu tiên số Kho bạc, Sở Tài chính). */
-function chiTieuWI(c){
-  const ty = (a,b) => `${dinhSo((a||0)/1000,1)} / ${dinhSo((b||0)/1000,1)} tỷ đồng`;
-  const mt = mocHienTai(MOC_VON);
-  const mk = (ma, ngan, ten, pt, moc, ghi) => ({ ma, ngan, ten, pt: pt==null ? null : +pt, mt: moc, lop: mau(pt==null?null:+pt, moc), ghi: pt==null ? (ghi || 'Chưa có số liệu') : ghi });
-  const nguonGn = c.gn_nguon === 'tinh' ? `số Kho bạc, Sở Tài chính${c.gn_ky ? ' ngày ' + c.gn_ky : ''}` : 'số xã báo cáo';
-  return [
-    mk('gn','Giải ngân','Giải ngân vốn đầu tư công năm nay', c.tl_gn, mt, `${ty(c.gn_lk,c.kh_von)} · ${nguonGn}`),
-    mk('gnnt','Vốn năm trước','Giải ngân vốn năm trước chuyển sang', c.tl_gn_nt, {pt:100, ngay:'2026-12-31'}, c.von_nt ? ty(c.gn_nt,c.von_nt) : 'Không có vốn năm trước chuyển sang'),
-    mk('nd','Nhà, đất dôi dư','Nhà, đất dôi dư đã xử lý xong', c.nd_pct_xong, {pt:100, ngay:'2027-01-05'}, c.nd_tong ? `${c.nd_xong||0} / ${c.nd_tong} cơ sở${c.nd_nguon==='tinh' && c.nd_tinh ? ' · danh mục Sở Tài chính ' + c.nd_tinh.ky : ''}` : 'Không có cơ sở phải xử lý'),
-    mk('thu','Thu ngân sách','Thu ngân sách so với dự toán', c.tl_thu, null, ty(c.thu_lk,c.du_toan) + (c.so_cung_ky!=null ? ` · bằng ${dinhSo(c.so_cung_ky,1)}% cùng kỳ` : '')),
-    mk('khcn','Vốn KHCN, CĐS','Giải ngân vốn KHCN, ĐMST, CĐS', c.khcn_tl, mt, c.khcn_von ? ty(c.khcn_gn,c.khcn_von) : 'Không có kế hoạch vốn'),
-    mk('ct','Vốn CTMTQG','Giải ngân vốn các chương trình MTQG', c.ct_tl, mt, c.ct_von ? `${ty(c.ct_gn,c.ct_von)}${c.ct_ky ? ' · ngày ' + c.ct_ky : ''}` : 'Không có kế hoạch vốn'),
-  ];
+const NHOM_CT = [
+  ['Xây dựng Đảng, hệ thống chính trị', /đảng viên|kiểm tra|giám sát|kỷ luật|hội nghị|kiểm điểm|KPI|OKR|Bí thư|đối thoại/i],
+  ['Giải ngân vốn đầu tư công', /giải ngân|kế hoạch vốn|vốn đề nghị điều chuyển|mục tiêu quốc gia/i],
+  ['Thu ngân sách nhà nước', /thu ngân sách|dự toán|tiền sử dụng đất|cùng kỳ/i],
+  ['Nhà, đất dôi dư', /dôi dư|\] Số cơ sở/i],
+  ['Văn hóa - xã hội', /lao động|đào tạo nghề|hộ nghèo|cận nghèo|hoàn cảnh khó khăn|an sinh|khám sức khỏe|nhà ở được|suất quà/i],
+  ['Hành chính, chuyển đổi số', /thủ tục hành chính|hồ sơ|dịch vụ công|VNeID|kỹ năng số|Luồng xanh|nền tảng số/i],
+  ['An ninh, trật tự, quốc phòng', /phạm tội|vi phạm pháp luật|tai nạn|khiếu nại|đơn thư|giao quân|nhập ngũ|an ninh/i],
+  ['Giải phóng mặt bằng, khó khăn, vướng mắc', /mặt bằng|bồi thường|tái định cư|điểm nghẽn/i],
+  ['Sản xuất nông, lâm nghiệp, thủy sản', /cây trồng|gia súc|gia cầm|rừng|thủy sản/i],
+  ['Phòng, chống thiên tai', /thiên tai|sạt lở|lũ quét/i],
+  ['Doanh nghiệp, hạ tầng, môi trường', /./]];
+const THU_TU_NHOM = ['Xây dựng Đảng, hệ thống chính trị', 'Giải ngân vốn đầu tư công', 'Thu ngân sách nhà nước', 'Nhà, đất dôi dư', 'Giải phóng mặt bằng, khó khăn, vướng mắc', 'Doanh nghiệp, hạ tầng, môi trường', 'Sản xuất nông, lâm nghiệp, thủy sản', 'Phòng, chống thiên tai', 'Văn hóa - xã hội', 'Hành chính, chuyển đổi số', 'An ninh, trật tự, quốc phòng'];
+const nhomCua = t => (NHOM_CT.find(([, re]) => re.test(t)) || NHOM_CT[NHOM_CT.length - 1])[0];
+
+/**
+ * Gom mọi chỉ số của xã thành một danh sách thống nhất. Mỗi chỉ số có: kỳ này, kỳ trước liền kề,
+ * chuỗi các kỳ (vẽ biểu đồ) và số của các xã giáp ranh (tô bản đồ). Không suy ra số khi thiếu.
+ */
+function boChiSo(d, g, kA, dsLc){
+  const ds = [];
+  const wx = d.wi && d.wi.xa, wl = (d.wi && d.wi.lanCan) || {};
+  if (wx && wl[d.xa]) {
+    CS_WI_DS.forEach(([f, ten, dv, q]) => {
+      const o = wl[d.xa][f]; if (!o || o[0] == null) return;
+      const lc = {};
+      [d.xa].concat(dsLc).forEach(x => { const a = wl[x] && wl[x][f]; if (a) lc[x] = { cur:a[0], prev:a[1] }; });
+      const ls = (wx.lichSu && wx.lichSu[f]) || [];
+      ds.push({ id:'wi:' + f, nhom:'wi', ten, dv, q, cur:o[0], prev:o[1], kyCur:o[2], kyPrev:o[3],
+        chuoi: ls.slice(-8).map(([k, v]) => [ngayNgan(k), v]), lc,
+        nhanCur: o[2] ? 'cập nhật ' + ngayNgan(o[2]) : 'kỳ hiện tại', nhanPrev: o[3] ? ngayNgan(o[3]) : '' });
+    });
+  }
+  if (kA != null) {
+    const kB = tuanTruoc(kA), cacTuan = Object.keys(g.tuan).map(Number).sort((a,b) => a-b).filter(k => k <= kA).slice(-8);
+    const lcF = d.lanCan || { cau:[], xa:{} };
+    g.thuTu.filter(t => g.tuan[kA][t] != null && !/khách du lịch/i.test(t)).forEach(t => {
+      const m = t.match(/^\[([^\]]+)\]\s*(.*?)(?:\s*\(([^)]*)\))?$/);
+      const ky = m ? m[1] : '', ten = m ? m[2] : t, dv = m && m[3] ? m[3] : '';
+      const iCau = lcF.cau.indexOf(t), lc = {};
+      lc[d.xa] = { cur: g.tuan[kA][t], prev: g.tuan[kB] ? g.tuan[kB][t] : null };
+      dsLc.forEach(x => {
+        const w = lcF.xa[x]; if (!w || iCau < 0) return;
+        const gt = k => { const r = (w[k] || []).find(p => p[0] === iCau); return r ? r[1] : null; };
+        const c = gt(kA), p = gt(kB);
+        if (c != null || p != null) lc[x] = { cur:c, prev:p };
+      });
+      ds.push({ id:'f:' + t, nhom: nhomCua(t), ten, ky, dv, q:null, cur: g.tuan[kA][t], prev: g.tuan[kB] ? (g.tuan[kB][t] ?? null) : null,
+        chuoi: cacTuan.filter(k => g.tuan[k][t] != null).map(k => ['T' + (k % 100), g.tuan[k][t]]), lc,
+        nhanCur: 'tuần ' + (kA % 100), nhanPrev: 'tuần ' + (kB % 100), lech: /triệu đồng/.test(t) && g.tuan[kA][t] >= 1e6 });
+    });
+  }
+  return ds;
 }
 
-/* ---------- Bản đồ ---------- */
-function veBanDo(bd, xa, lop){
+/** Màu của một xã theo chỉ số đang chọn: theo mốc (an toàn, cảnh báo, báo động) hoặc theo độ lớn (thang xanh). */
+function bangMau(ct){
+  const gt = Object.values(ct.lc).map(o => o.cur).filter(v => v != null);
+  if (ct.q) return v => ST_MAU[trangThai(ct.q, v)];
+  const lo = Math.min(...gt), hi = Math.max(...gt);
+  return v => v == null ? 'var(--map-nb)' : hi === lo ? THANG_XANH[2] : THANG_XANH[Math.min(4, Math.floor((v - lo) / (hi - lo) * 5))];
+}
+
+/* ---------- Bản đồ theo chỉ số: xã mình và các xã giáp ranh ---------- */
+function veBanDo(bd, xa, ct){
   const muc = bd && bd.xa[xa];
   if (!muc) return '<p class="rong">Chưa có ranh giới của đơn vị này.</p>';
   const lat0 = 17 * Math.PI / 180, kx = Math.cos(lat0);
   const P = ([x,y]) => [x*kx, -y];
   const hop = ten => { let a=[1e9,1e9,-1e9,-1e9]; bd.xa[ten].p.forEach(pl=>pl.forEach(r=>r.forEach(pt=>{const [u,v]=P(pt); a=[Math.min(a[0],u),Math.min(a[1],v),Math.max(a[2],u),Math.max(a[3],v)];}))); return a; };
   const duong = ten => bd.xa[ten].p.map(pl => pl.map(r => 'M' + r.map(pt => P(pt).map(v => v.toFixed(4)).join(',')).join('L') + 'Z').join('')).join('');
-  const tam = ten => { const b = hop(ten); return [(b[0]+b[2])/2, (b[1]+b[3])/2]; };
-  // khung nhìn: xã của mình và các xã giáp ranh, nới lề
-  let b = hop(xa);
-  const kh = muc.k.length ? muc.k : [];
-  const bx = hop(xa); const rx = (bx[2]-bx[0]), ry = (bx[3]-bx[1]);
-  b = [bx[0]-rx*.6, bx[1]-ry*.6, bx[2]+rx*.6, bx[3]+ry*.6];
+  // điểm đặt nhãn: điểm bên trong vòng lớn nhất, xa đường ranh nhất (nhãn không lấn sang xã bên cạnh)
+  const tam = ten => {
+    let r = null, ma = 0;
+    bd.xa[ten].p.forEach(pl => { const q = pl[0].map(P); let A = 0; for (let i = 0, j = q.length-1; i < q.length; j = i++) A += q[j][0]*q[i][1] - q[i][0]*q[j][1]; if (Math.abs(A) > ma) { ma = Math.abs(A); r = q; } });
+    const b = hop(ten); if (!r) return [(b[0]+b[2])/2, (b[1]+b[3])/2];
+    const trong = (x, y) => { let c = false; for (let i = 0, j = r.length-1; i < r.length; j = i++) if ((r[i][1] > y) !== (r[j][1] > y) && x < (r[j][0]-r[i][0]) * (y-r[i][1]) / (r[j][1]-r[i][1]) + r[i][0]) c = !c; return c; };
+    const kc = (x, y) => { let m = Infinity; for (let i = 0, j = r.length-1; i < r.length; j = i++) { const [x1,y1] = r[j], [x2,y2] = r[i], dx = x2-x1, dy = y2-y1, l = dx*dx+dy*dy; let t = l ? ((x-x1)*dx + (y-y1)*dy) / l : 0; t = Math.max(0, Math.min(1, t)); const ex = x1+t*dx-x, ey = y1+t*dy-y; m = Math.min(m, ex*ex+ey*ey); } return m; };
+    let tot = null, dt = -1; const N = 24;
+    for (let i = 1; i < N; i++) for (let j = 1; j < N; j++) { const x = b[0] + (b[2]-b[0])*i/N, y = b[1] + (b[3]-b[1])*j/N; if (!trong(x, y)) continue; const d = kc(x, y); if (d > dt) { dt = d; tot = [x, y]; } }
+    return tot || [(b[0]+b[2])/2, (b[1]+b[3])/2];
+  };
+  const kh = muc.k || [];
+  // khung nhìn bao cả xã mình và các xã giáp ranh
+  let b = hop(xa); kh.forEach(t => { const q = hop(t); b = [Math.min(b[0],q[0]),Math.min(b[1],q[1]),Math.max(b[2],q[2]),Math.max(b[3],q[3])]; });
+  const rx = (b[2]-b[0])*.04, ry = (b[3]-b[1])*.04; b = [b[0]-rx, b[1]-ry, b[2]+rx, b[3]+ry];
   const w = b[2]-b[0], h = b[3]-b[1];
-  const W = 640, H = Math.max(320, Math.min(520, W * h / w));
-  // giữ tỉ lệ: mở rộng hộp theo khung
-  const kHop = Math.max(w / W, h / H); const cx = (b[0]+b[2])/2, cy = (b[1]+b[3])/2;
+  const W = 640, H = Math.max(360, Math.min(560, W * h / w));
+  const kHop = Math.max(w / W, h / H), cx = (b[0]+b[2])/2, cy = (b[1]+b[3])/2;
   const vb = [cx - kHop*W/2, cy - kHop*H/2, kHop*W, kHop*H];
-  const tenTat = t => t.replace(/^(Xã|Phường|Đặc khu)\s+/, '');
-  let s = `<svg viewBox="${vb.map(v=>v.toFixed(4)).join(' ')}" role="img" aria-label="Bản đồ ${esc(xa)} và các địa bàn giáp ranh"><rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="var(--surface)"/>`;
+  const mauCua = ct ? bangMau(ct) : null;
+  const fill = t => { if (!ct) return t === xa ? 'var(--brand)' : 'var(--map-nb)'; const o = ct.lc[t]; return o && o.cur != null ? mauCua(o.cur) : 'var(--map-nb)'; };
+  let s = `<svg viewBox="${vb.map(v=>v.toFixed(4)).join(' ')}" role="img" aria-label="Bản đồ ${esc(xa)} và các xã giáp ranh${ct ? ' theo chỉ số ' + esc(ct.ten) : ''}"><rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="var(--surface)"/>`;
   Object.keys(bd.xa).forEach(t => { if (t !== xa && kh.indexOf(t) < 0) s += `<path class="bd-khac" d="${duong(t)}"/>`; });
-  kh.forEach(t => { s += `<path class="bd-nb" d="${duong(t)}"><title>${esc(t)}</title></path>`; });
-  s += `<path class="bd-xa" fill="${MAU_HEX[lop]}" d="${duong(xa)}"><title>${esc(xa)}</title></path>`;
-  const fs = kHop;
-  kh.forEach(t => { const [x,y] = tam(t); if (x>vb[0] && x<vb[0]+vb[2] && y>vb[1] && y<vb[1]+vb[3]) s += `<text class="nhan-bd" x="${x}" y="${y}" style="font-size:${12*fs}px;stroke-width:${3*fs}px">${esc(tenTat(t))}</text>`; });
-  const [x0,y0] = tam(xa);
-  s += `<text class="nhan-bd chinh" x="${x0}" y="${y0}" style="font-size:${16*fs}px;stroke-width:${3*fs}px">${esc(tenTat(xa))}</text></svg>`;
-  // bản đồ nhỏ toàn tỉnh
+  kh.forEach(t => { const o = ct && ct.lc[t]; s += `<path class="bd-lc" fill="${fill(t)}" d="${duong(t)}"><title>${esc(t)}${ct ? ': ' + (o && o.cur != null ? dinhGT(o.cur, ct.dv) : 'chưa có số liệu') : ''}</title></path>`; });
+  s += `<path class="bd-xa" fill="${fill(xa)}" d="${duong(xa)}"><title>${esc(xa)}${ct ? ': ' + dinhGT(ct.cur, ct.dv) : ''}</title></path>`;
+  // trên điện thoại bản đồ thu nhỏ, phóng chữ để vẫn đọc được
+  const fs = kHop * Math.min(1.9, Math.max(1, 640 / Math.max(300, (window.innerWidth || 640) - 70)));
+  const nhan = (t, chinh) => {
+    const [x,y] = tam(t); if (!(x>vb[0] && x<vb[0]+vb[2] && y>vb[1] && y<vb[1]+vb[3])) return '';
+    const o = ct && ct.lc[t];
+    const gt = ct ? (o && o.cur != null ? dinhGT(o.cur, ct.dv, true) : 'chưa có') : '';
+    const lech = ct && o && o.cur != null && o.prev != null ? (o.cur > o.prev ? ' ▲' : o.cur < o.prev ? ' ▼' : '') : '';
+    const c = chinh ? 1.25 : 1;
+    return `<text class="nhan-bd${chinh ? ' chinh' : ''}" x="${x}" y="${y - 7*fs*c}" style="font-size:${12*fs*c}px;stroke-width:${3*fs}px">${esc(tenTat(t))}</text>`
+      + (ct ? `<text class="nhan-so${chinh ? ' chinh' : ''}" x="${x}" y="${y + 9*fs*c}" style="font-size:${13*fs*c}px;stroke-width:${3*fs}px">${esc(gt + lech)}</text>` : '');
+  };
+  kh.forEach(t => { s += nhan(t, false); });
+  s += nhan(xa, true) + '</svg>';
   let tb = [1e9,1e9,-1e9,-1e9]; Object.keys(bd.xa).forEach(t => { const q = hop(t); tb = [Math.min(tb[0],q[0]),Math.min(tb[1],q[1]),Math.max(tb[2],q[2]),Math.max(tb[3],q[3])]; });
   let ins = `<svg viewBox="${tb[0]} ${tb[1]} ${tb[2]-tb[0]} ${tb[3]-tb[1]}" aria-hidden="true">`;
-  Object.keys(bd.xa).forEach(t => { ins += `<path d="${duong(t)}" fill="${t===xa ? 'var(--brand)' : 'var(--map-nb)'}"/>`; });
+  Object.keys(bd.xa).forEach(t => { ins += `<path d="${duong(t)}" fill="${t===xa ? 'var(--brand)' : kh.indexOf(t) >= 0 ? 'var(--map-nb-line)' : 'var(--map-nb)'}"/>`; });
   ins += '</svg>';
-  return `<div class="khung-bd">${s}<div class="inset" title="Vị trí trong tỉnh">${ins}</div></div>`
-    + (kh.length ? `<p class="chi-tiet-bd">Giáp ranh: ${kh.map(esc).join(', ')}.</p>` : '');
+  return `<div class="khung-bd">${s}<div class="inset" title="Vị trí trong tỉnh">${ins}</div></div>`;
+}
+
+function chuGiai(ct){
+  if (!ct) return '';
+  if (ct.q) return `<div class="chu-giai">${['good','warn','crit','neutral'].map(k => `<span><i style="background:${ST_MAU[k]}"></i>${ST_TEN[k]}</span>`).join('')}<span>· ${esc(mocChu(ct.q))}</span></div>`;
+  const gt = Object.values(ct.lc).map(o => o.cur).filter(v => v != null);
+  if (!gt.length) return '';
+  return `<div class="chu-giai"><span>Thấp</span>${THANG_XANH.map(c => `<i style="background:${c};margin:0"></i>`).join('')}<span>Cao</span><span>· từ ${esc(dinhGT(Math.min(...gt), ct.dv, true))} đến ${esc(dinhGT(Math.max(...gt), ct.dv, true))} trong nhóm xã giáp ranh</span></div>`;
+}
+
+/* ---------- Biểu đồ ---------- */
+/** So sánh xã mình với các xã giáp ranh: thanh ngang, vạch mảnh là số kỳ trước liền kề. */
+function veSoSanh(ct, xa){
+  const ds = Object.keys(ct.lc).map(x => ({ x, ...ct.lc[x] }));
+  if (ds.length < 2) return '<p class="rong">Các xã giáp ranh chưa có số liệu của chỉ số này.</p>';
+  ds.sort((a, b) => (b.cur ?? -Infinity) - (a.cur ?? -Infinity));
+  const mau = bangMau(ct);
+  const hi = Math.max(ct.dv === '%' && ct.q ? 100 : 0, ...ds.map(o => Math.max(o.cur ?? 0, o.prev ?? 0))) || 1;
+  return '<div class="ss">' + ds.map(o => {
+    const w = o.cur == null ? 0 : Math.max(0, o.cur) / hi * 100, p = o.prev == null ? null : Math.max(0, o.prev) / hi * 100;
+    return `<div class="ss-dong${o.x === xa ? ' minh' : ''}"><div class="ss-ten" title="${esc(o.x)}">${esc(tenTat(o.x))}</div>
+      <div class="ss-truc"><i style="width:${w.toFixed(1)}%;background:${o.cur == null ? 'transparent' : mau(o.cur)}"></i>${p != null ? `<b style="left:${p.toFixed(1)}%" title="Kỳ trước: ${esc(dinhGT(o.prev, ct.dv))}"></b>` : ''}</div>
+      <div class="ss-so num">${o.cur == null ? '<span class="rong">chưa có</span>' : esc(dinhGT(o.cur, ct.dv, true))}<span class="ss-ch">${chenhLech(o.cur, o.prev, ct.dv).replace(/ (điểm %|tr\.đ)/, '')}</span></div></div>`;
+  }).join('') + '</div><p class="chi-tiet-bd">Vạch mảnh là số kỳ trước liền kề; ▲▼ là tăng, giảm so với kỳ đó.</p>';
+}
+
+/** Diễn biến qua các kỳ của xã mình: cột có ghi số. */
+function veDienBien(ct){
+  const c = ct.chuoi || [];
+  if (c.length < 2) return '<p class="rong">Chưa đủ hai kỳ số liệu để vẽ diễn biến.</p>';
+  const W = 520, H = 170, l = 8, r = 8, t = 22, bt = 26, n = c.length;
+  const hi = Math.max(...c.map(p => p[1]), ct.dv === '%' && ct.q ? 100 : 0) || 1;
+  const bw = (W - l - r) / n, mau = ct.q ? (v => ST_MAU[trangThai(ct.q, v)]) : (() => '#4F7CAD');
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="db" role="img" aria-label="Diễn biến ${esc(ct.ten)} qua các kỳ">`;
+  s += `<line x1="${l}" x2="${W-r}" y1="${H-bt}" y2="${H-bt}" stroke="var(--line)"/>`;
+  const m = ct.q && mocCua(ct.q);
+  if (m && ct.q !== 'kiem_tra') { const y = H - bt - (m[1] / hi) * (H - t - bt); s += `<line x1="${l}" x2="${W-r}" y1="${y}" y2="${y}" stroke="var(--ink-3)" stroke-dasharray="4 3"/><text x="${W-r}" y="${y-4}" text-anchor="end" class="db-moc">mốc ${dinhSo(m[1],1)}%</text>`; }
+  c.forEach(([nh, v], i) => {
+    const hh = Math.max(1, (Math.max(0, v) / hi) * (H - t - bt)), x = l + i * bw + bw * .18, ww = bw * .64, y = H - bt - hh;
+    s += `<rect x="${x}" y="${y}" width="${ww}" height="${hh}" rx="3" fill="${mau(v)}" opacity="${i === n-1 ? 1 : .55}"/>`
+      + `<text x="${x + ww/2}" y="${y - 5}" text-anchor="middle" class="db-so${i === n-1 ? ' cuoi' : ''}">${esc(dinhGT(v, ct.dv, true))}</text>`
+      + `<text x="${x + ww/2}" y="${H - 8}" text-anchor="middle" class="db-nhan">${esc(nh)}</text>`;
+  });
+  return s + '</svg>';
+}
+
+/** Đường xu hướng nhỏ trong bảng. */
+function veSpark(c){
+  if (!c || !c.length) return '';
+  const W = 84, H = 24, n = c.length, v = c.map(p => p[1]), lo = Math.min(...v), hi = Math.max(...v);
+  const X = i => n === 1 ? W/2 : 3 + i * (W - 6) / (n - 1), Y = x => hi === lo ? H/2 : H - 4 - (x - lo) / (hi - lo) * (H - 8);
+  const d = v.map((x, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(x).toFixed(1)).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" class="spark" aria-hidden="true"><path d="${d}" fill="none" stroke="var(--neutral)" stroke-width="1.5"/><circle cx="${X(n-1)}" cy="${Y(v[n-1])}" r="2.6" fill="var(--brand)"/></svg>`;
 }
 
 /* ---------- Vẽ trang ---------- */
@@ -400,6 +608,7 @@ async function veTrang(d){
   const khoang = tn.nhan.replace(/^Tuần \d+\s*/, '').replace(/[()]/g,'');
   const conLai = conMs > 0 ? (conMs > 864e5 ? `còn ${Math.floor(conMs/864e5)} ngày` : `còn ${Math.floor(conMs/36e5)} giờ ${Math.floor(conMs%36e5/6e4)} phút`) : 'đã quá hạn';
   const wm = d.wi && d.wi.meta;
+  if (wm && wm.ngayChot) NGAY_CHOT = wm.ngayChot;
   if (wm && wm.hien) $('khoiKy').innerHTML =
     `<div class="o-ky vang"><small>${esc(wm.hien.nhan)}</small><b>${esc(wm.hien.tuan)}</b><span>${esc(wm.hien.chu)}</span></div>`
     + (wm.tiep ? `<div class="o-ky vien"><small>${esc(wm.tiep.nhan)}</small><b>${esc(wm.tiep.tuan)}</b><span>${esc(wm.tiep.chu)}</span></div>` : '');
@@ -408,74 +617,70 @@ async function veTrang(d){
     + `<div class="o-ky vien${!banNay.length && conMs <= 0 ? ' tre' : ''}"><small>Hạn nộp</small><b>17:00 thứ Năm</b><span>${ngayHan} · ${conLai}</span></div>`;
 
   const g = gopChiSo(d.baoCao);
+  const cacTuan = Object.keys(g.tuan).map(Number).sort((a,b)=>b-a);
+  const kA = cacTuan.length ? (cacTuan.indexOf(kNay) >= 0 ? kNay : cacTuan[0]) : null;
+  const dsLc = (bd && bd.xa[d.xa] && bd.xa[d.xa].k) || [];
+  const ds = boChiSo(d, g, kA, dsLc);
+  const ct = ds.find(c => c.id === chiTieuBd) || ds[0] || null;
+  if (ct) chiTieuBd = ct.id;
   const wx = d.wi && d.wi.xa;
-  const ct = wx && wx.chiSo ? chiTieuWI(wx.chiSo) : chiTieuTrongTam(g);
   let h = '';
   if (thuNghiem) h += `<div class="thu-nghiem">Bản xem thử với số liệu giả.</div>`;
 
-  // Bản đồ + thẻ chỉ số
-  const chon = ct.find(c => c.ma === chiTieuBd) || ct[0];
-  h += `<div class="luoi"><section class="panel c7"><header><h2>Bản đồ địa bàn</h2><span class="chuthich">Tô màu theo chỉ tiêu đang chọn; các địa bàn giáp ranh để chìm${wx && wx.chiSo ? '; số liệu Quang Tri Weekly Index' : ''}</span></header><div class="than">
-    <div class="seg" role="group" aria-label="Chỉ tiêu tô màu bản đồ">${ct.map(c => `<button type="button" data-bd="${c.ma}" aria-pressed="${c.ma===chon.ma}">${esc(c.ngan)}</button>`).join('')}</div>
-    <div class="chu-giai"><span><i style="background:var(--good)"></i>Đạt mốc</span><span><i style="background:var(--warn)"></i>Cảnh báo (thấp hơn mốc dưới 10 điểm)</span><span><i style="background:var(--crit)"></i>Báo động</span><span><i style="background:var(--neutral)"></i>Chưa có mốc hoặc chưa có số liệu</span></div>
-    <p class="chi-tiet-bd" style="margin:0 0 4px"><b style="color:var(--ink)">${esc(chon.ten)}: ${chon.pt==null ? 'chưa có số liệu' : dinhSo(chon.pt,1) + '%'}</b>${chon.mt ? ` · mốc ${chon.mt.pt}% trước ${ngayVn(chon.mt.ngay)}` : ''}</p>
-    ${veBanDo(bd, d.xa, chon.lop)}</div></section>`;
-
-  h += `<section class="c5"><div class="cot-the">`;
-  // thẻ nộp báo cáo
+  // Hàng thẻ: nộp báo cáo + chỉ số trọng tâm
   const lopNop = banNay.length ? 'xanh' : conMs > 0 ? 'vang' : 'do';
-  h += `<div class="the ${lopNop} rong-full"><div class="t">Nộp báo cáo ${esc(tn.nhan.replace(/\s*\(.*\)/,''))} <span class="huy ${lopNop}">${banNay.length ? 'Đã nộp' : conMs > 0 ? 'Chưa nộp' : 'Quá hạn'}</span></div>
-    <div class="so num">${banNay.length} bản</div>`
-    + (banNay.length ? '<ul class="ds-gui">' + banNay.map(b => `<li><span>${esc(b.boPhan || 'Đảng ủy')}</span><span>${esc(gioPhut(b.tg))}${b.ms > han.getTime() ? ' · sau hạn' : ''}</span></li>`).join('') + '</ul>'
-      : `<div class="g">Hạn 17:00 thứ Năm ${ngayHan}, ${conLai}.</div>`) + '</div>';
-  ct.forEach(c => {
-    h += `<div class="the ${c.lop}${c.pt==null?' rong':''}"><div class="t">${esc(c.ten)}</div><div class="so num">${c.pt==null ? '–' : dinhSo(c.pt,1) + '%'}</div>
-      <div class="thanh"><i style="width:${c.pt==null?0:Math.min(100,Math.max(0,c.pt)).toFixed(1)}%"></i></div>
-      <div class="g">${esc(c.ghi)}${c.mt ? `<br>Mốc ${c.mt.pt}% trước ${ngayVn(c.mt.ngay)}` : ''}</div></div>`;
+  h += `<div class="hang-the"><div class="the ${lopNop}"><div class="t">Nộp báo cáo ${esc(tn.nhan.replace(/\s*\(.*\)/,''))} <span class="huy ${lopNop}">${banNay.length ? 'Đã nộp' : conMs > 0 ? 'Chưa nộp' : 'Quá hạn'}</span></div>
+    <div class="so num">${banNay.length} bản</div><div class="g">${banNay.length ? banNay.map(b => esc(b.boPhan || 'Đảng ủy') + ' ' + esc(gioPhut(b.tg).replace(/ ngày.*/, ''))).join(' · ') : `Hạn 17:00 thứ Năm ${ngayHan}, ${conLai}.`}</div></div>`;
+  ds.filter(c => c.nhom === 'wi' && c.dv === '%').slice(0, 7).forEach(c => {
+    const st = c.q ? trangThai(c.q, c.cur) : 'neutral';
+    h += `<button type="button" class="the ${ST_LOP[st]}${c.id === chiTieuBd ? ' dang-chon' : ''}" data-ct="${esc(c.id)}"><div class="t">${esc(c.ten)}</div>
+      <div class="so num">${dinhGT(c.cur, c.dv)}</div><div class="thanh"><i style="width:${Math.min(100, Math.max(0, c.cur || 0)).toFixed(1)}%"></i></div>
+      <div class="g">${chenhLech(c.cur, c.prev, c.dv) || '<span class="bang">chưa có kỳ trước</span>'}${c.nhanPrev ? ` so với ${esc(c.nhanPrev)}` : ''}</div></button>`;
   });
-  h += `</div></section></div>`;
+  h += '</div>';
+
+  // Bản đồ + biểu đồ theo chỉ số đang chọn
+  if (ct) {
+    const nguonCt = ct.nhom === 'wi' ? 'Quang Tri Weekly Index' : 'biểu mẫu báo cáo tuần';
+    h += `<div class="luoi" id="khungBanDo"><section class="panel c7"><header><h2>Bản đồ chỉ số</h2><span class="chuthich">${esc(d.xa)} và ${dsLc.length} xã giáp ranh; nguồn ${nguonCt}</span></header><div class="than">
+      <label class="chon-ct"><span>Chỉ số</span><select id="chonCt">${[['wi','Chỉ số trọng tâm (Weekly Index)']].concat(THU_TU_NHOM.map(n => [n, n])).map(([k, nh]) => {
+        const nh2 = ds.filter(c => c.nhom === k); if (!nh2.length) return '';
+        return `<optgroup label="${esc(nh)}">${nh2.map(c => `<option value="${esc(c.id)}"${c.id === ct.id ? ' selected' : ''}>${esc(c.ten)}${c.ky ? ' [' + esc(c.ky) + ']' : ''}</option>`).join('')}</optgroup>`; }).join('')}</select></label>
+      <p class="tom-tat"><b>${esc(ct.ten)}</b>: <span class="num">${dinhGT(ct.cur, ct.dv, true)}${ct.dv && !/^(%|triệu đồng)$/.test(ct.dv) ? ' ' + esc(ct.dv) : ''}</span> (${esc(ct.nhanCur)}) · kỳ trước liền kề ${ct.prev == null ? 'chưa có số liệu' : `<span class="num">${dinhGT(ct.prev, ct.dv, true)}</span>${ct.nhanPrev ? ' (' + esc(ct.nhanPrev) + ')' : ''} ${chenhLech(ct.cur, ct.prev, ct.dv)}`}${ct.q ? ` · <span class="huy ${ST_LOP[trangThai(ct.q, ct.cur)]}">${ST_TEN[trangThai(ct.q, ct.cur)]}</span>` : ''}</p>
+      ${chuGiai(ct)}
+      ${veBanDo(bd, d.xa, ct)}
+      ${dsLc.length ? `<p class="chi-tiet-bd">Giáp ranh: ${dsLc.map(esc).join(', ')}. Các xã khác để chìm.</p>` : ''}</div></section>
+      <section class="panel c5"><header><h2>So với các xã giáp ranh</h2><span class="chuthich">${esc(ct.nhanCur)}</span></header><div class="than">${veSoSanh(ct, d.xa)}</div>
+      <header style="padding-top:4px"><h2>Diễn biến qua các kỳ</h2><span class="chuthich">${esc(d.xa)}</span></header><div class="than">${veDienBien(ct)}</div></section></div>`;
+  } else {
+    h += `<section class="panel"><header><h2>Bản đồ địa bàn</h2></header><div class="than">${veBanDo(bd, d.xa, null)}<p class="rong">Đơn vị chưa có số liệu để tô bản đồ.</p></div></section>`;
+  }
+
+  // Biểu số liệu của xã
+  h += `<section class="panel"><header><h2>Biểu số liệu của xã</h2><span class="chuthich">Mỗi chỉ số so với kỳ trước liền kề; bấm vào một dòng để xem trên bản đồ cùng các xã giáp ranh</span></header><div class="than"><div class="bang-wrap"><table class="bieu"><thead><tr><th>Chỉ tiêu</th><th class="so">Kỳ này</th><th class="so">Kỳ trước liền kề</th><th class="so">Tăng, giảm</th><th class="so an-dt">Diễn biến</th></tr></thead><tbody>`;
+  const dongCt = c => {
+    const st = c.q ? trangThai(c.q, c.cur) : null;
+    return `<tr data-ct="${esc(c.id)}"${c.id === chiTieuBd ? ' class="dang-chon"' : ''}><td>${c.ky ? `<span class="tag">${esc(c.ky)}</span>` : ''}${esc(c.ten)}${c.dv && c.dv !== '%' ? ` <span class="dv">(${esc(c.dv)})</span>` : ''}${st ? ` <span class="huy ${ST_LOP[st]}">${ST_TEN[st]}</span>` : ''}${c.lech ? '<span class="canh">Số trên 1.000 tỷ đồng, đề nghị kiểm tra lại đơn vị tính (triệu đồng)</span>' : ''}</td>
+      <td class="so num"><b>${dinhGT(c.cur, c.dv)}</b>${c.nhom === 'wi' && c.kyCur ? `<span class="chenh bang">${ngayNgan(c.kyCur)}</span>` : ''}</td>
+      <td class="so num">${dinhGT(c.prev, c.dv)}${c.nhom === 'wi' && c.kyPrev ? `<span class="chenh bang">${ngayNgan(c.kyPrev)}</span>` : ''}</td>
+      <td class="so">${chenhLech(c.cur, c.prev, c.dv) || '<span class="bang">–</span>'}</td><td class="so an-dt">${veSpark(c.chuoi)}</td></tr>`;
+  };
+  const wiDs = ds.filter(c => c.nhom === 'wi');
+  if (wiDs.length) {
+    h += `<tr class="nhom-ct"><td colspan="5">Chỉ số trọng tâm · Quang Tri Weekly Index <span class="dv">(kỳ cập nhật gần nhất so với kỳ cập nhật liền trước)</span></td></tr>` + wiDs.map(dongCt).join('');
+  }
+  if (kA != null) {
+    h += `<tr class="nhom-ct mo"><td colspan="5">Số liệu xã báo cáo qua biểu mẫu <span class="dv">(tuần ${kA % 100} so với tuần ${tuanTruoc(kA) % 100})</span></td></tr>`;
+    THU_TU_NHOM.forEach(n => {
+      const nh = ds.filter(c => c.nhom === n); if (!nh.length) return;
+      h += `<tr class="nhom-con"><td colspan="5">${esc(n)}</td></tr>` + nh.map(dongCt).join('');
+    });
+  }
+  if (!ds.length) h += '<tr><td colspan="5" class="rong">Đơn vị chưa có số liệu.</td></tr>';
+  h += '</tbody></table></div></div></section>';
 
   if (wx) h += veMucWI(wx);
 
-  // Bảng số liệu
-  const cacTuan = Object.keys(g.tuan).map(Number).sort((a,b)=>b-a);
-  if (cacTuan.length) {
-    const kA = cacTuan.indexOf(kNay) >= 0 ? kNay : cacTuan[0];
-    const kB = cacTuan.find(k => k < kA);
-    const nhan = k => 'Tuần ' + (k % 100);
-    // Chỉ hiện chỉ tiêu có trong kỳ đang xem (bỏ chỉ tiêu cũ không còn khảo sát), bỏ lượt khách du lịch; gom theo nhóm
-    const dong0 = g.thuTu.filter(t => g.tuan[kA][t] != null && !/khách du lịch/i.test(t));
-    const NHOM_CT = [
-      ['Xây dựng Đảng, hệ thống chính trị', /đảng viên|kiểm tra|giám sát|kỷ luật|hội nghị|kiểm điểm|KPI|OKR|Bí thư|đối thoại/i],
-      ['Giải ngân vốn đầu tư công', /giải ngân|kế hoạch vốn|vốn đề nghị điều chuyển|mục tiêu quốc gia/i],
-      ['Thu ngân sách nhà nước', /thu ngân sách|dự toán|tiền sử dụng đất|cùng kỳ/i],
-      ['Nhà, đất dôi dư', /dôi dư|\] Số cơ sở/i],
-      ['Văn hóa - xã hội', /lao động|đào tạo nghề|hộ nghèo|cận nghèo|hoàn cảnh khó khăn|an sinh|khám sức khỏe|nhà ở được|suất quà/i],
-      ['Hành chính, chuyển đổi số', /thủ tục hành chính|hồ sơ|dịch vụ công|VNeID|kỹ năng số|Luồng xanh|nền tảng số/i],
-      ['An ninh, trật tự, quốc phòng', /phạm tội|vi phạm pháp luật|tai nạn|khiếu nại|đơn thư|giao quân|nhập ngũ|an ninh/i],
-      ['Giải phóng mặt bằng, khó khăn, vướng mắc', /mặt bằng|bồi thường|tái định cư|điểm nghẽn/i],
-      ['Sản xuất nông, lâm nghiệp, thủy sản', /cây trồng|gia súc|gia cầm|rừng|thủy sản/i],
-      ['Phòng, chống thiên tai', /thiên tai|sạt lở|lũ quét/i],
-      ['Doanh nghiệp, hạ tầng, môi trường', /./]];
-    const THU_TU = ['Xây dựng Đảng, hệ thống chính trị', 'Giải ngân vốn đầu tư công', 'Thu ngân sách nhà nước', 'Nhà, đất dôi dư', 'Giải phóng mặt bằng, khó khăn, vướng mắc', 'Doanh nghiệp, hạ tầng, môi trường', 'Sản xuất nông, lâm nghiệp, thủy sản', 'Phòng, chống thiên tai', 'Văn hóa - xã hội', 'Hành chính, chuyển đổi số', 'An ninh, trật tự, quốc phòng'];
-    const nhomCua = t => (NHOM_CT.find(([, re]) => re.test(t)) || NHOM_CT[NHOM_CT.length - 1])[0];
-    const theoNhom = new Map(THU_TU.map(n => [n, []]));
-    dong0.forEach(t => theoNhom.get(nhomCua(t)).push(t));
-    h += `<section class="panel"><header><h2>Số liệu đã báo cáo</h2><span class="chuthich">${nhan(kA)}${kB ? ' so với ' + nhan(kB) : ''}; xếp theo nhóm, chỉ gồm các chỉ tiêu được khảo sát trong tuần; tuần có nhiều bản gửi thì lấy số của bản gửi sau cùng</span></header><div class="than"><div class="bang-wrap"><table><thead><tr><th>Chỉ tiêu</th><th class="so">${nhan(kA)}</th>${kB ? `<th class="so">${nhan(kB)}</th>` : ''}</tr></thead><tbody>`;
-    theoNhom.forEach((ds, ten) => { if (!ds.length) return;
-      h += `<tr class="nhom-ct"><td colspan="${kB ? 3 : 2}">${esc(ten)}</td></tr>`;
-      ds.forEach(t => {
-      const m = t.match(/^\[([^\]]+)\]\s*(.*)$/); const ky = m ? m[1] : '', ten = m ? m[2] : t;
-      const a = g.tuan[kA][t], b = kB ? g.tuan[kB][t] : null;
-      let cl = '';
-      if (a != null && b != null) { const x = a - b; cl = x > 0 ? `<span class="tang">▲ ${dinhSo(x)}</span>` : x < 0 ? `<span class="giam">▼ ${dinhSo(-x)}</span>` : '<span class="bang">＝</span>'; }
-      const lech = /triệu đồng/.test(t) && a != null && a >= 1e6 ? '<span class="canh">Số trên 1.000 tỷ đồng, đề nghị kiểm tra lại đơn vị tính (triệu đồng)</span>' : '';
-      h += `<tr><td><span class="tag">${esc(ky)}</span>${esc(ten)}${lech}</td><td class="so num">${dinhSo(a)}${cl ? `<span class="chenh">${cl}</span>` : ''}</td>${kB ? `<td class="so num">${dinhSo(b)}</td>` : ''}</tr>`;
-      });
-    });
-    if (!dong0.length) h += `<tr><td colspan="${kB ? 3 : 2}" class="rong">${nhan(kA)} đơn vị chưa có số liệu.</td></tr>`;
-    h += '</tbody></table></div></div></section>';
-  }
 
   // Lịch sử
   h += `<section class="panel"><header><h2>Các bản báo cáo đã gửi</h2><span class="chuthich">${d.baoCao.length} bản, mới nhất ở trên; tuần tính theo ngày gửi, từ thứ Hai đến Chủ nhật</span></header><div class="than">`;
@@ -494,7 +699,9 @@ async function veTrang(d){
   h += '</div></section>';
 
   $('noiDung').innerHTML = h;
-  $('noiDung').querySelectorAll('[data-bd]').forEach(b => b.addEventListener('click', () => { chiTieuBd = b.dataset.bd; veTrang(duLieuCuoi); }));
+  const chonChiSo = (id, cuon) => { chiTieuBd = id; veTrang(duLieuCuoi).then(() => { if (cuon) { const k = $('khungBanDo'); if (k) k.scrollIntoView({ behavior:'smooth', block:'start' }); } }); };
+  $('noiDung').querySelectorAll('[data-ct]').forEach(el => el.addEventListener('click', () => chonChiSo(el.dataset.ct, el.tagName === 'TR')));
+  const sel = $('chonCt'); if (sel) sel.addEventListener('change', () => chonChiSo(sel.value, false));
   const lc = new Date(d.capNhat).toLocaleString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'2-digit', year:'numeric' });
   $('chanTrang').innerHTML = `${d.wi && d.wi.meta ? 'Chỉ số, danh mục và nhiệm vụ lấy từ Quang Tri Weekly Index (đồng bộ ' + new Date(d.wi.meta.capNhat).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}) + '); ' : ''}tình trạng nộp và bản gửi đọc trực tiếp từ biểu mẫu, cập nhật lúc ${lc}. Trang tự làm mới 5 phút một lần.<br>Văn phòng Tỉnh ủy Quảng Trị · © 2026 ĐTH-VPTU`;
 }

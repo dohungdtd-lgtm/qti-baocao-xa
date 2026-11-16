@@ -13,6 +13,7 @@ const CAU_HINH = {
   TAB_TRA_LOI: 'Câu trả lời biểu mẫu 1',
   ID_TAI_KHOAN: '17FYIhMUsTT94H2rHohFZyNsf2Y8TN769o56y-2fnbG0', // Tài khoản trang báo cáo xã (không chia sẻ); đọc trang tính đầu tiên
   TAB_TAI_KHOAN: 'TaiKhoan',
+  URL_BAN_DO: 'https://dohungdtd-lgtm.github.io/qti-baocao-xa/ban-do.json', // ranh giới, danh sách xã giáp ranh
   HAN_PHIEN_GIO: 12,          // mã phiên đăng nhập hết hạn sau 12 giờ
   DEM_GIAY: 120,              // dữ liệu mỗi xã được giữ tạm 2 phút để trang mở nhanh
   SAI_TOI_DA_MOT_SO: 5,       // một số nhập sai 5 lần trong 15 phút thì tạm khóa số đó
@@ -159,20 +160,91 @@ function duLieu_(ma) {
   const p = moMa_(ma);
   if (!p) return { ok: false, hetPhien: true, loi: 'Phiên đăng nhập đã hết hạn, đồng chí đăng nhập lại.' };
 
+  let dsLc = [];
+  try { dsLc = lanCanCua_(p.xa); } catch (e) { console.error(e); }
+
   const dem = CacheService.getScriptCache();
-  const khoaDem = 'xa:' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, p.xa, Utilities.Charset.UTF_8));
-  let baoCao = null;
-  const daCo = dem.get(khoaDem);
-  if (daCo) baoCao = JSON.parse(daCo);
-  if (!baoCao) {
-    const sh = SpreadsheetApp.openById(CAU_HINH.ID_TRA_LOI).getSheetByName(CAU_HINH.TAB_TRA_LOI);
-    baoCao = locBaoCaoXa(sh.getDataRange().getDisplayValues(), p.xa);
-    const chuoi = JSON.stringify(baoCao);
-    if (chuoi.length < 95000) dem.put(khoaDem, chuoi, CAU_HINH.DEM_GIAY);
+  const hx = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, p.xa, Utilities.Charset.UTF_8));
+  let baoCao = null, lanCan = null;
+  const c1 = dem.get('xa:' + hx), c2 = dem.get('lc:' + hx);
+  if (c1) baoCao = JSON.parse(c1);
+  if (c2) lanCan = JSON.parse(c2);
+  if (!baoCao || !lanCan) {
+    const v = SpreadsheetApp.openById(CAU_HINH.ID_TRA_LOI).getSheetByName(CAU_HINH.TAB_TRA_LOI).getDataRange().getDisplayValues();
+    baoCao = locBaoCaoXa(v, p.xa);
+    lanCan = chiSoTuanCacXa(v, dsLc, 4);
+    const s1 = JSON.stringify(baoCao), s2 = JSON.stringify(lanCan);
+    if (s1.length < 95000) dem.put('xa:' + hx, s1, CAU_HINH.DEM_GIAY);
+    if (s2.length < 95000) dem.put('lc:' + hx, s2, CAU_HINH.DEM_GIAY);
   }
   let wi = null;
-  try { if (typeof wiCuaXa === 'function') wi = wiCuaXa(p.xa); } catch (e) { console.error(e); }
-  return { ok: true, xa: p.xa, ten: p.ten, capNhat: new Date().toISOString(), tuanNay: tuanCua(new Date()), baoCao: baoCao, wi: wi };
+  try { if (typeof wiCuaXa === 'function') wi = wiCuaXa(p.xa, dsLc); } catch (e) { console.error(e); }
+  return { ok: true, xa: p.xa, ten: p.ten, capNhat: new Date().toISOString(), tuanNay: tuanCua(new Date()),
+           baoCao: baoCao, lanCan: lanCan, wi: wi };
+}
+
+/* ============================ CÁC XÃ GIÁP RANH ============================ */
+
+/** Danh sách xã giáp ranh, lấy từ ban-do.json trên trang (giữ tạm 6 giờ). */
+function lanCanCua_(xa) {
+  const dem = CacheService.getScriptCache();
+  let bang = dem.get('lancan');
+  if (!bang) {
+    const d = JSON.parse(UrlFetchApp.fetch(CAU_HINH.URL_BAN_DO).getContentText('UTF-8'));
+    const k = {};
+    Object.keys(d.xa).forEach(x => { k[x] = d.xa[x].k || []; });
+    bang = JSON.stringify(k);
+    dem.put('lancan', bang, 21600);
+  }
+  return JSON.parse(bang)[xa] || [];
+}
+
+/**
+ * Chỉ số dạng số của các xã giáp ranh theo tuần (chỉ các câu có nhãn kỳ "[...]"), để tô bản đồ theo chỉ số.
+ * Mỗi tuần, mỗi chỉ tiêu lấy số của bản gửi sau cùng. Không trả nội dung chữ của báo cáo xã khác.
+ * Trả về { cau: [tên chỉ tiêu], xa: { tênXã: { khóaTuần: [[chỉ số câu, giá trị], ...] } } }, giữ soTuan tuần gần nhất.
+ */
+function chiSoTuanCacXa(v, dsXa, soTuan) {
+  const kq = { cau: [], xa: {} };
+  if (!dsXa || !dsXa.length) return kq;
+  const tieuDe = v[0].map(t => String(t).replace(/\s+/g, ' ').trim());
+  const cDonVi = tieuDe.indexOf('Đơn vị');
+  const cot = [];
+  tieuDe.forEach((t, i) => { if (/^\[[^\]]+\]/.test(t)) cot.push(i); });
+  const viTri = {}; cot.forEach((c, j) => { viTri[c] = j; });
+  kq.cau = cot.map(c => tieuDe[c]);
+  const can = {}; dsXa.forEach(x => { can[x] = true; kq.xa[x] = {}; });
+  const hang = [];
+  for (let r = 1; r < v.length; r++) {
+    const xa = String(v[r][cDonVi] || '').trim();
+    if (!can[xa]) continue;
+    const tg = docThoiGian(v[r][0]); if (!tg) continue;
+    hang.push([tg.getTime(), xa, r, tuanCua(tg)]);
+  }
+  hang.sort((a, b) => a[0] - b[0]);
+  const tam = {};
+  hang.forEach(([, xa, r, t]) => {
+    const k = t.nam * 100 + t.so;
+    const o = (tam[xa] = tam[xa] || {}); const w = (o[k] = o[k] || {});
+    cot.forEach(c => { const n = docSo_(v[r][c]); if (n != null) w[viTri[c]] = n; });
+  });
+  Object.keys(tam).forEach(xa => {
+    Object.keys(tam[xa]).map(Number).sort((a, b) => b - a).slice(0, soTuan).forEach(k => {
+      kq.xa[xa][k] = Object.keys(tam[xa][k]).map(j => [Number(j), tam[xa][k][j]]);
+    });
+  });
+  return kq;
+}
+
+/** Đọc số kiểu Việt Nam ("52.400", "1,5", "12%"); trả null nếu không phải số. */
+function docSo_(s) {
+  let t = String(s == null ? '' : s).trim().replace(/\s/g, '').replace(/%$/, '');
+  if (!/^-?[\d.,]+$/.test(t)) return null;
+  const c = t.lastIndexOf(','), d = t.lastIndexOf('.');
+  if (c >= 0 && d >= 0) t = c > d ? t.replace(/\./g, '').replace(',', '.') : t.replace(/,/g, '');
+  else if (c >= 0) t = /^-?\d{1,3}(,\d{3})+$/.test(t) ? t.replace(/,/g, '') : t.replace(',', '.');
+  else if (d >= 0 && /^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+  const n = Number(t); return isFinite(n) ? n : null;
 }
 
 /**
@@ -236,4 +308,4 @@ function tuanCua(d) {
 }
 
 /* Để chạy thử ngoài Apps Script (Node) */
-if (typeof module !== 'undefined') module.exports = { locBaoCaoXa, tuanCua, docThoiGian, chuanSdt_ };
+if (typeof module !== 'undefined') module.exports = { locBaoCaoXa, chiSoTuanCacXa, tuanCua, docThoiGian, chuanSdt_, docSo_ };
