@@ -46,6 +46,8 @@ button,input,select{font:inherit;color:inherit}
 .hop label{font-weight:600}
 .o-nhap{font-size:20px;letter-spacing:.06em;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;width:100%}
 select.o-nhap{font-size:15px;letter-spacing:0;background:var(--surface)}
+.thong-bao-nhe{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 16px;border-radius:8px;z-index:99;font-size:14px}
+.nut-top:disabled{opacity:.6;cursor:wait}
 .nut{font-weight:600;padding:11px;border:0;border-radius:8px;background:var(--brand);color:var(--on-brand);cursor:pointer}
 .nut:disabled{opacity:.6;cursor:wait}
 .goi-y{font-size:13px;color:var(--ink-2);margin:0}
@@ -230,6 +232,7 @@ tbody tr.nhom-ct td{background:var(--surface-2);font-weight:700;color:var(--ink)
   <div class="top"><div class="wrap">
     <span id="dongDn"></span>
     <button class="nut-top" id="nutDoiXa" type="button" hidden>Đổi đơn vị</button>
+    <button class="nut-top" id="nutExcel" type="button" title="Tải số liệu của đơn vị ra tệp Excel (.xlsx)">Tải Excel</button>
     <button class="nut-top" id="nutLamMoi" type="button">Làm mới</button>
     <button class="nut-top" id="nutThoat" type="button">Đăng xuất</button>
   </div></div>
@@ -295,6 +298,54 @@ $('fDangNhap').addEventListener('submit', async ev => {
 $('nutThoat').addEventListener('click', () => { luu.xoa(); maPhien = null; sdtDaNhap=''; clearInterval(henGio); veManDn(); });
 $('nutDoiXa').addEventListener('click', () => { clearInterval(henGio); veManDn(); $('khoiChonXa').classList.remove('an'); $('khoiSdt').classList.add('an'); $('nutDn').textContent='Xem đơn vị này'; });
 $('nutLamMoi').addEventListener('click', () => taiDuLieu());
+$('nutExcel').addEventListener('click', () => taiExcel());
+
+/* ---------- Tải số liệu ra Excel ---------- */
+let xuatCuoi = null;
+function napThuVienXlsx(){
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  return new Promise((ok, loi) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = () => ok(window.XLSX); s.onerror = () => loi(new Error('Không tải được thư viện Excel, kiểm tra kết nối mạng.'));
+    document.head.appendChild(s);
+  });
+}
+async function taiExcel(){
+  const nut = $('nutExcel');
+  if (!xuatCuoi) { alertNhe('Chưa có số liệu để tải.'); return; }
+  const cu = nut.textContent; nut.textContent = 'Đang tạo tệp…'; nut.disabled = true;
+  try {
+    const X = await napThuVienXlsx();
+    const { d, g, ds } = xuatCuoi;
+    const wb = X.utils.book_new();
+    const tieuDe = (t) => [[t], ['Đơn vị: ' + d.xa], ['Trích xuất lúc ' + new Date().toLocaleString('vi-VN', { timeZone:'Asia/Ho_Chi_Minh' }) + ' từ trang báo cáo tuần cấp xã (Văn phòng Tỉnh ủy)'], []];
+    // 1. Biểu số liệu: kỳ này so với kỳ trước
+    const b1 = tieuDe('BIỂU SỐ LIỆU CỦA ĐƠN VỊ (kỳ này so với kỳ trước liền kề)');
+    b1.push(['Nhóm', 'Chỉ tiêu', 'Kỳ', 'Đơn vị tính', 'Kỳ này', 'Kỳ trước', 'Tăng (+)/giảm (-)', 'Mốc kỳ này', 'Mốc kỳ trước']);
+    ds.forEach(c => b1.push([c.nhom === 'wi' ? 'Chỉ số trọng tâm (Weekly Index)' : c.nhom, c.ten, c.ky || '', c.dv || '',
+      c.cur ?? '', c.prev ?? '', (c.cur != null && c.prev != null) ? Math.round((c.cur - c.prev) * 100) / 100 : '', c.nhanCur || '', c.nhanPrev || '']));
+    const s1 = X.utils.aoa_to_sheet(b1); s1['!cols'] = [{wch:28},{wch:60},{wch:10},{wch:14},{wch:14},{wch:14},{wch:14},{wch:16},{wch:16}];
+    X.utils.book_append_sheet(wb, s1, 'Bieu so lieu');
+    // 2. Số liệu biểu mẫu theo tuần (mỗi cột một tuần)
+    const tuans = Object.keys(g.tuan).map(Number).sort((a,b) => a-b);
+    const b2 = tieuDe('SỐ LIỆU CÁC BỘ PHẬN NHẬP QUA BIỂU MẪU, THEO TUẦN');
+    b2.push(['Chỉ tiêu (theo câu hỏi biểu mẫu)'].concat(tuans.map(k => 'Tuần ' + (k % 100) + '/' + Math.floor(k / 100))));
+    g.thuTu.forEach(t => { if (tuans.some(k => g.tuan[k][t] != null)) b2.push([chuan(t)].concat(tuans.map(k => g.tuan[k][t] ?? ''))); });
+    const s2 = X.utils.aoa_to_sheet(b2); s2['!cols'] = [{wch:80}].concat(tuans.map(() => ({wch:14})));
+    X.utils.book_append_sheet(wb, s2, 'Theo tuan');
+    // 3. Toàn bộ các bản đã gửi (mỗi dòng một câu trả lời)
+    const b3 = tieuDe('TOÀN BỘ CÁC BẢN BÁO CÁO ĐÃ GỬI QUA BIỂU MẪU');
+    b3.push(['Tuần', 'Bộ phận gửi', 'Thời gian gửi', 'Câu hỏi', 'Trả lời', 'Giá trị số']);
+    d.baoCao.forEach(b => (b.muc || []).forEach(([q, a]) => { const n = docSo(a); b3.push([b.nhanTuan || ('Tuần ' + b.tuan), b.boPhan || 'Đảng ủy', b.tg || '', chuan(q), String(a ?? ''), n ?? '']); }));
+    const s3 = X.utils.aoa_to_sheet(b3); s3['!cols'] = [{wch:26},{wch:26},{wch:20},{wch:70},{wch:60},{wch:14}];
+    X.utils.book_append_sheet(wb, s3, 'Cac ban da gui');
+    const ten = 'So lieu bao cao tuan - ' + d.xa.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D') + ' - ' + homNay() + '.xlsx';
+    X.writeFile(wb, ten);
+  } catch(e) { alertNhe('Chưa tạo được tệp Excel. ' + (e.message || '')); }
+  finally { nut.textContent = cu; nut.disabled = false; }
+}
+function alertNhe(t){ const e = document.createElement('div'); e.className = 'thong-bao-nhe'; e.textContent = t; document.body.appendChild(e); setTimeout(() => e.remove(), 4000); }
 
 function moTrangChinh(){
   $('manDangNhap').classList.add('an'); $('manChinh').classList.remove('an');
@@ -621,6 +672,7 @@ async function veTrang(d){
   const kA = cacTuan.length ? (cacTuan.indexOf(kNay) >= 0 ? kNay : cacTuan[0]) : null;
   const dsLc = (bd && bd.xa[d.xa] && bd.xa[d.xa].k) || [];
   const ds = boChiSo(d, g, kA, dsLc);
+  xuatCuoi = { d, g, ds };
   const ct = ds.find(c => c.id === chiTieuBd) || ds[0] || null;
   if (ct) chiTieuBd = ct.id;
   const wx = d.wi && d.wi.xa;
